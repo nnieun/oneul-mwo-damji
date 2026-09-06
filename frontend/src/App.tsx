@@ -59,6 +59,7 @@ function SplashScreen({ onStart }: { onStart: () => void }) {
           <div className="text-center">
             <h1 className="text-[28px] font-black text-[#191F28] tracking-tight">오늘 뭐 담지</h1>
             <p className="text-[15px] text-[#6B7684] mt-1 font-medium">AI가 인식하는 스마트 카트</p>
+
           </div>
         </div>
 
