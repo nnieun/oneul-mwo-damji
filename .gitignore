@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+.env*
+*.tsbuildinfo
+*.log
+
+# 내부 기획 문서와 디자인 요청 산출물은 저장소에 포함하지 않습니다.
+/GITHUB_BRANCH_STRATEGY.md
+/final.md
+**/final.md
+모바일 웹 디자인 요청/
+**/모바일 웹 디자인 요청/
