@@ -1,0 +1,10 @@
+{
+  "description": "Delivers a mobile-optimized web design inspired by Toss with intuitive button styles, enhancing user experience and engagement on smartphones.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
