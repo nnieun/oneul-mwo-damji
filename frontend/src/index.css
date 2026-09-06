@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+@theme inline {
+  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-toss-blue: #3182F6;
+  --color-toss-blue-dark: #1B6EF3;
+  --color-toss-bg: #F2F4F6;
+  --color-toss-card: #FFFFFF;
+  --color-toss-text: #191F28;
+  --color-toss-sub: #6B7684;
+  --color-toss-line: #E5E8EB;
+  --color-toss-green: #00B252;
+  --color-toss-red: #F04452;
+  --color-toss-orange: #FF8B00;
+}
