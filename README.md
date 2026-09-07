@@ -109,4 +109,5 @@ pnpm.cmd test:e2e
 - [개발·검증 결과](docs/implementation-status.md)
 - [pytest 전체 결과](docs/test-results/F07-integration.md)
 - [브라우저 통합 결과](docs/test-results/F07-browser.md)
+- [트러블슈팅](docs/트러블슈팅.md)
 

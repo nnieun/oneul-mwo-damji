@@ -163,7 +163,9 @@ export default function App() {
       {cart && <>
         {tab === 'scan' && <>
           <div className="camera-panel">
-            {camera.state === 'running' && config.mode === 'live' ? <video ref={videoRef} autoPlay playsInline muted aria-label="카트 카메라 실시간 영상" /> : camera.state === 'running' ? <div className="camera-placeholder"><span>🧪</span><p>더미 모드 · 실제 인식 아님</p></div> : <div className="camera-placeholder"><span>📷</span><p>{camera.message}</p></div>}
+            <video ref={videoRef} autoPlay playsInline muted aria-label="카트 카메라 실시간 영상" hidden={!(camera.state === 'running' && config.mode === 'live')} />
+            {camera.state === 'running' && config.mode === 'demo' && <div className="camera-placeholder"><span>🧪</span><p>더미 모드 · 실제 인식 아님</p></div>}
+            {camera.state !== 'running' && <div className="camera-placeholder"><span>📷</span><p>{camera.message}</p></div>}
             <span className={`camera-badge ${camera.state === 'running' ? 'active' : ''}`}>{config.mode === 'demo' ? '더미 모드 · 실제 인식 아님' : '실제 카메라'} · {camera.state === 'running' ? '연결됨' : '연결 대기'}</span>
           </div>
           <canvas ref={canvasRef} hidden />
