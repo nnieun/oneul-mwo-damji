@@ -2,7 +2,8 @@
 export interface CartLine { product_id: number; name: string; emoji: string; ingredients: string[]; quantity: number; unit_price: number; subtotal: number }
 export interface Cart { id: string; status: string; revision: number; items: CartLine[]; total: number; item_count: number }
 export interface Candidate { candidate_id: string; product: Product; confidence: number; status: string; expires_at: number }
-export interface Scan { scan_id: string; candidates: Candidate[]; mode: string; message: string }
+export interface Detection { label: string; confidence: number }
+export interface Scan { scan_id: string; candidates: Candidate[]; detections: Detection[]; mode: string; message: string }
 export interface RecognitionConfig { mode: string; message: string }
 export interface Recipe { id: number; name: string; cooking_time_minutes: number; servings: number; steps: string[]; ingredients: { id: number; name: string; amount: string; required: boolean }[]; matched: string[]; missing: string[]; optional_missing: string[]; category: 'ready' | 'almost' }
 export interface Recommendations { cart_id: string; revision: number; owned: string[]; recipes: Recipe[]; note: string }

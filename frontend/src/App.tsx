@@ -64,8 +64,8 @@ export default function App() {
 
   useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()) }, [])
 
-  async function startCamera() {
-    if (config.mode === 'demo') { setCamera({ state: 'running', message: '더미 모드입니다. 실제 카메라를 사용하지 않아요.' }); return }
+  async function startCamera(): Promise<boolean> {
+    if (config.mode === 'demo') { setCamera({ state: 'running', message: '더미 모드입니다. 실제 카메라를 사용하지 않아요.' }); return true }
     setCamera({ state: 'starting', message: '카메라 연결 중입니다.' })
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
@@ -73,8 +73,10 @@ export default function App() {
       stream.getVideoTracks()[0]?.addEventListener('ended', () => setCamera({ state: 'error', message: '카메라 연결이 끊겼습니다. 다시 시작해 주세요.' }))
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
       setCamera({ state: 'running', message: '카메라 연결됨' })
+      return true
     } catch {
       setCamera({ state: 'error', message: '카메라 접근 권한이 필요합니다. 브라우저에서 이 사이트의 카메라 사용을 허용해 주세요.' })
+      return false
     }
   }
 
@@ -137,13 +139,11 @@ export default function App() {
     void action(() => submitAdd(pending))
   }
 
-  function scan() {
-    void action(async () => {
-      const frame = await captureFrame()
-      const result = await postImage<Scan>('/api/recognition/scan', frame)
-      setCandidates(result.candidates)
-      setNotice(`${result.mode === 'demo' ? '더미 인식 · ' : ''}${result.message}`)
-    })
+  async function performScan() {
+    const frame = await captureFrame()
+    const result = await postImage<Scan>('/api/recognition/scan', frame)
+    setCandidates(result.candidates)
+    setNotice(`${result.mode === 'demo' ? '더미 인식 · ' : ''}${result.message}`)
   }
 
   const titles = { scan: '상품 스캔', cart: '장바구니', recipe: '요리 추천' }
@@ -169,7 +169,7 @@ export default function App() {
             <span className={`camera-badge ${camera.state === 'running' ? 'active' : ''}`}>{config.mode === 'demo' ? '더미 모드 · 실제 인식 아님' : '실제 카메라'} · {camera.state === 'running' ? '연결됨' : '연결 대기'}</span>
           </div>
           <canvas ref={canvasRef} hidden />
-          <div className="button-row"><button disabled={blocked} onClick={() => void action(async () => { if (camera.state === 'running') stopCamera(); else await startCamera() })}>{camera.state === 'running' ? '카메라 종료' : '카메라 시작'}</button><button className="primary" disabled={blocked || camera.state !== 'running'} onClick={scan}>상품 스캔</button></div>
+          <div className="button-row"><button className="primary full" disabled={blocked} onClick={() => void action(async () => { if (camera.state === 'running') { stopCamera(); return } if (await startCamera()) await performScan() })}>{camera.state === 'running' ? '카메라 종료' : '카메라 시작'}</button></div>
           <button className="summary compact" onClick={() => setTab('cart')}><span>예상 구매금액 · {cart.item_count}개</span><strong>{won(cart.total)} →</strong></button>
           <div className="section-heading"><h2>인식 후보</h2><span className="muted">{candidates.length}개 대기</span></div><p className="muted">확인 후 담거나 제외하세요. 잘못 인식하면 상품을 바꿀 수 있어요.</p>
           {candidates.length === 0 ? <div className="card empty"><span>🔍</span><p>상품을 스캔하면 후보가 나타나요.</p></div> : candidates.map(candidate => <CandidateCard key={candidate.candidate_id} candidate={candidate} products={products} disabled={blocked} onAdd={id => add(id, candidate.candidate_id)} onDismiss={() => void action(async () => { await post(`/api/recognition/candidates/${candidate.candidate_id}/dismiss`); setCandidates(old => old.filter(c => c.candidate_id !== candidate.candidate_id)) })} />)}
@@ -184,7 +184,7 @@ export default function App() {
           {cart.items.length > 0 && <button className="primary full" onClick={() => setNotice(`쇼핑 내역: ${cart.item_count}개 상품, 예상 ${won(cart.total)}. 실제 결제 기능은 제공하지 않습니다.`)}>쇼핑 내역 확인</button>}
         </>}
         {tab === 'recipe' && <>
-          <h2>담은 재료로 만드는 한 끼</h2><p className="muted">물은 기본 제공해요. 양념은 담은 상품만 보유한 것으로 계산해요.</p>
+          <h2>담은 재료로 만드는 한 끼</h2><p className="muted">맛있게 만드세요</p>
           {recipeLoading && <p role="status">추천을 불러오는 중이에요…</p>}
           {recipeError && <div className="alert" role="alert"><p>{recipeError}</p><button onClick={() => setRecipeRefresh(n => n + 1)}>추천 다시 불러오기</button></div>}
           {recommendations && <><div className="chips">{recommendations.owned.map(name => <span key={name}>{name}</span>)}</div><p className="muted">{recommendations.note}</p>

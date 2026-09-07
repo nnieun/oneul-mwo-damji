@@ -14,7 +14,7 @@ def add(c,cid,pid):
 
 def test_catalog_and_detail(client):
     recipes=client.get('/api/recipes').json()
-    assert len(recipes)==10
+    assert len(recipes)==14
     assert all(r['is_dummy'] and r['steps'] and r['ingredients'] for r in recipes)
     assert client.get('/api/recipes/1').json()==recipes[0]
     assert client.get('/api/recipes/999').status_code==404

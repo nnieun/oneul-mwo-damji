@@ -19,13 +19,13 @@ def test_cart_crud_price_and_persistence(tmp_path):
         assert c.get('/api/carts/active').status_code == 404
         cid=c.post('/api/carts').json()['id']
         assert c.post('/api/carts').json()['id'] == cid
-        assert add(c,cid,qty=2).json()['total'] == 6400
-        assert add(c,cid,pid=2).json()['total'] == 8200
+        assert add(c,cid,qty=2).json()['total'] == 640
+        assert add(c,cid,pid=2).json()['total'] == 2440
         changed=c.patch(f'/api/carts/{cid}/items/1',json={'quantity':3}).json()
-        assert changed['total']==11400 and changed['item_count']==4
+        assert changed['total']==2760 and changed['item_count']==4
     with TestClient(create_app(Database(path))) as c:
-        assert c.get('/api/carts/active').json()['total']==11400
-        assert c.delete(f'/api/carts/{cid}/items/2').json()['total']==9600
+        assert c.get('/api/carts/active').json()['total']==2760
+        assert c.delete(f'/api/carts/{cid}/items/2').json()['total']==960
         assert c.delete(f'/api/carts/{cid}/items/1').json()['items']==[]
 
 
@@ -69,4 +69,4 @@ def test_unit_price_is_snapshot(client):
     add(client,cid)
     with client.app.state.database.connect() as c:
         c.execute('UPDATE products SET price=1 WHERE id=1')
-    assert add(client,cid).json()['total']==6400
+    assert add(client,cid).json()['total']==640

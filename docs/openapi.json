@@ -2424,6 +2424,14 @@
             "type": "array",
             "title": "Candidates"
           },
+          "detections": {
+            "items": {
+              "$ref": "#/components/schemas/Detection"
+            },
+            "type": "array",
+            "title": "Detections",
+            "description": "모델이 실시간으로 분류한 원본 결과. 등록 상품과 매칭되지 않은 라벨도 포함합니다."
+          },
           "mode": {
             "type": "string",
             "title": "Mode"
@@ -2437,6 +2445,7 @@
         "required": [
           "scan_id",
           "candidates",
+          "detections",
           "mode",
           "message"
         ],

@@ -53,7 +53,7 @@ class Database:
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as c:
             version = c.execute('PRAGMA user_version').fetchone()[0]
-            if version > 1:
+            if version > 3:
                 raise RuntimeError('Unsupported database schema version')
             if version == 0:
                 c.executescript('BEGIN IMMEDIATE; CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL CHECK(price>=0), ingredient TEXT NOT NULL); CREATE TABLE IF NOT EXISTS recipes(id INTEGER PRIMARY KEY,name TEXT NOT NULL,ingredients TEXT NOT NULL,cooking_time TEXT NOT NULL);')
@@ -66,12 +66,27 @@ class Database:
                 ]:
                     if name not in {r['name'] for r in c.execute(f'PRAGMA table_info({table})')}:
                         c.execute(f'ALTER TABLE {table} ADD COLUMN {name} {definition}')
-                # Keep DDL, seed data and schema version in the same transaction.
                 for statement in SCHEMA.split(";"):
                     if statement.strip():
                         c.execute(statement)
-                self._seed(c)
-                c.execute('PRAGMA user_version=1')
+            else:
+                c.execute('BEGIN IMMEDIATE')
+            # _seed is idempotent (INSERT OR IGNORE / guarded upserts), so it is safe and
+            # intentional to re-run it on every startup: new PRODUCTS/RECIPES entries in
+            # seed.py reach existing databases without a schema version bump each time.
+            self._seed(c)
+            if version < 3:
+                # One-time correction: these package sizes were replaced with single-unit
+                # counts to match one-object-per-frame recognition. Only touches rows still
+                # holding the old default name+price, so a user's own edits are left alone.
+                for pid, old_name, old_price, new_name, new_price in [
+                    (1,'계란 (10구)',3200,'계란 (1개)',320),
+                    (15,'양파 (3개)',2800,'양파 (1개)',930),
+                    (19,'사과 (3개)',4500,'사과 (1개)',1500),
+                    (21,'당근 (3개)',2200,'당근 (1개)',730),
+                ]:
+                    c.execute('UPDATE products SET name=?, price=? WHERE id=? AND name=? AND price=?', (new_name,new_price,pid,old_name,old_price))
+                c.execute('PRAGMA user_version=3')
 
     def _seed(self, c):
         def ingredient_id(name):
@@ -84,7 +99,8 @@ class Database:
             c.execute('INSERT OR IGNORE INTO product_ingredients VALUES (?,?)', (pid, ingredient_id(row['ingredient'])))
             if row['ingredient'] == ingredient:
                 c.execute('UPDATE products SET emoji=? WHERE id=?', (emoji,pid))
-                for alias in (label, ingredient):
+                labels = label if isinstance(label, tuple) else (label,)
+                for alias in (*labels, ingredient):
                     c.execute('INSERT OR IGNORE INTO product_labels VALUES (?,?,?)', ('*',alias,pid))
         for row in c.execute('SELECT id,ingredient FROM products').fetchall():
             c.execute('INSERT OR IGNORE INTO product_ingredients VALUES (?,?)', (row['id'],ingredient_id(row['ingredient'])))

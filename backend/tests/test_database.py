@@ -8,10 +8,10 @@ def test_seed_idempotent_and_normalized(tmp_path):
     db = Database(tmp_path / 'test.db')
     db.initialize()
     db.initialize()
-    assert len(db.products()) == 18
-    assert len(db.recipes()) == 10
+    assert len(db.products()) == 25
+    assert len(db.recipes()) == 14
     with db.connect() as c:
-        assert c.execute('PRAGMA user_version').fetchone()[0] == 1
+        assert c.execute('PRAGMA user_version').fetchone()[0] == 3
         assert c.execute('SELECT COUNT(*) FROM recipe_ingredients').fetchone()[0] > 40
         with pytest.raises(sqlite3.IntegrityError):
             c.execute("INSERT INTO products VALUES (99,'bad',-1,'bad','')")
@@ -23,7 +23,7 @@ def test_memory_connections_work_across_threads():
     db = Database(':memory:')
     db.initialize()
     with ThreadPoolExecutor() as pool:
-        assert len(pool.submit(db.products).result()) == 18
+        assert len(pool.submit(db.products).result()) == 25
     db.close()
 
 

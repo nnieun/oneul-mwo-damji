@@ -35,6 +35,7 @@ class Candidate(BaseModel):
 class RecognitionResponse(BaseModel):
     scan_id: str
     candidates: list[Candidate]
+    detections: list[Detection] = Field(description='모델이 실시간으로 분류한 원본 결과. 등록 상품과 매칭되지 않은 라벨도 포함합니다.')
     mode: str
     message: str
 
@@ -112,7 +113,8 @@ def router(db,model):
                 position=detection.model_dump(exclude={'label','confidence'})
                 c.execute('INSERT INTO recognition_candidates VALUES (?,?,?,?,?,?,?)',(cid,scan_id,pid,detection.confidence,json.dumps(position),'pending',now+120))
                 results.append(dict(candidate_id=cid,product=products[pid],confidence=detection.confidence,position=position,status='pending',expires_at=now+120))
-            return dict(scan_id=scan_id,candidates=results,mode=mode,message=f'{len(results)}개 후보를 확인해 주세요.' if results else '등록된 상품을 인식하지 못했습니다. 다시 스캔하거나 직접 선택해 주세요.')
+            raw=sorted(detections,key=lambda d:d.confidence,reverse=True)
+            return dict(scan_id=scan_id,candidates=results,detections=raw,mode=mode,message=f'{len(results)}개 후보를 확인해 주세요.' if results else '등록된 상품을 인식하지 못했습니다. 다시 스캔하거나 직접 선택해 주세요.')
 
     @api.get('/config',response_model=RecognitionConfig,summary='인식 모드 확인',description='더미 모드인지, 브라우저 카메라로 실제 인식을 수행하는지 확인합니다.')
     def config():

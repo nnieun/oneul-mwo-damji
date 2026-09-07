@@ -124,3 +124,145 @@ Call log:
 - PASS: required/optional ingredients and recipe detail rendered from API
 - PASS: quantity, delete, server total and shopping summary
 - PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T03:17:22.452Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: FAIL
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- FAIL: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+6 !== 3
+
+    at file:///C:/worksapces/oneul-mwo-damji/frontend/tests/e2e.mjs:55:10
+
+# Browser integration run
+
+- Started: 2026-09-07T03:17:49.705Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: FAIL
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- FAIL: locator.click: Error: strict mode violation: getByRole('button', { name: '선택 상품 담기' }) resolved to 4 elements:
+    1) <button class="primary full">선택 상품 담기</button> aka getByRole('button', { name: '선택 상품 담기' }).first()
+    2) <button class="primary full">선택 상품 담기</button> aka getByRole('button', { name: '선택 상품 담기' }).nth(1)
+    3) <button class="primary full">선택 상품 담기</button> aka getByRole('button', { name: '선택 상품 담기' }).nth(2)
+    4) <button class="primary full">선택 상품 담기</button> aka getByRole('button', { name: '선택 상품 담기' }).nth(3)
+
+Call log:
+[2m  - waiting for getByRole('button', { name: '선택 상품 담기' })[22m
+
+    at C:\worksapces\oneul-mwo-damji\frontend\tests\e2e.mjs:72:52
+
+# Browser integration run
+
+- Started: 2026-09-07T03:18:22.700Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T04:22:26.306Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T04:31:37.608Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T04:38:10.138Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T04:44:21.788Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T04:52:22.392Z
+- Base commit: fb71cf6 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors

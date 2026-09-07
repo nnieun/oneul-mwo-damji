@@ -33,7 +33,7 @@ def test_complete_demo_and_swagger_contract(tmp_path):
         for candidate in scan['candidates']:
             r=c.post(f'/api/carts/{cid}/items',json={'product_id':candidate['product']['id'],'candidate_id':candidate['candidate_id']},headers={'Idempotency-Key':str(uuid4())})
             assert r.status_code==200
-        assert c.get(f'/api/carts/{cid}').json()['total']==7500
+        assert c.get(f'/api/carts/{cid}').json()['total']==4620
         assert c.get(f'/api/carts/{cid}/recommendations').json()['recipes']
 
 

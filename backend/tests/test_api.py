@@ -14,13 +14,13 @@ def client() -> TestClient:
 def test_products_are_loaded_from_sqlite(client: TestClient) -> None:
     response = client.get("/api/products")
     assert response.status_code == 200
-    assert response.json()[0]["name"] == "계란 (10구)"
+    assert response.json()[0]["name"] == "계란 (1개)"
 
 
 def test_cart_estimate_uses_quantity_and_product_price(client: TestClient) -> None:
     response = client.post("/api/cart/estimate", json={"items": [{"product_id": 1, "quantity": 2}, {"product_id": 2, "quantity": 1}]})
     assert response.status_code == 200
-    assert response.json() == {"total": 8200, "item_count": 3}
+    assert response.json() == {"total": 2440, "item_count": 3}
 
 
 def test_recognition_filters_low_confidence_and_deduplicates_product(client: TestClient) -> None:
