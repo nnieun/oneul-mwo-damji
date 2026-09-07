@@ -1,0 +1,448 @@
+{
+  "models": [
+    {
+      "model_id": "sang-rqj4u/ozm-4-yolov8n-t1",
+      "class_names": [
+        "apple",
+        "bread",
+        "carrot",
+        "egg",
+        "galic",
+        "l_onion",
+        "onion",
+        "raw_pork",
+        "shrimp",
+        "sliced_ham"
+      ],
+      "labels": [
+        "apple",
+        "bread",
+        "carrot",
+        "egg",
+        "galic",
+        "l_onion",
+        "onion",
+        "raw_pork",
+        "shrimp",
+        "sliced_ham",
+        "(미검출)"
+      ],
+      "matrix": {
+        "apple": {
+          "apple": 7,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "bread": {
+          "apple": 0,
+          "bread": 7,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "carrot": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 3,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "egg": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 9,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "galic": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 6,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "l_onion": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 6,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "onion": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 10,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "raw_pork": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 19,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "shrimp": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 3,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "sliced_ham": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 8,
+          "(미검출)": 0
+        }
+      },
+      "metrics": [
+        {
+          "label": "apple",
+          "support": 7,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "bread",
+          "support": 7,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "carrot",
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "egg",
+          "support": 9,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "galic",
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "l_onion",
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "onion",
+          "support": 10,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "raw_pork",
+          "support": 19,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "shrimp",
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "sliced_ham",
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      ]
+    },
+    {
+      "model_id": "sang-rqj4u/ozm-7-yolov8n-t1",
+      "class_names": [
+        "apple",
+        "bread",
+        "carrot",
+        "egg",
+        "galic",
+        "l_onion",
+        "onion",
+        "raw_pork",
+        "shrimp",
+        "sliced_ham"
+      ],
+      "labels": [
+        "apple",
+        "bread",
+        "carrot",
+        "egg",
+        "galic",
+        "l_onion",
+        "onion",
+        "raw_pork",
+        "shrimp",
+        "sliced_ham",
+        "(미검출)"
+      ],
+      "matrix": {
+        "apple": {
+          "apple": 7,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "bread": {
+          "apple": 0,
+          "bread": 7,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "carrot": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 1,
+          "egg": 1,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 1,
+          "(미검출)": 0
+        },
+        "egg": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 9,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "galic": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 6,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "l_onion": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 6,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "onion": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 2,
+          "l_onion": 0,
+          "onion": 6,
+          "raw_pork": 1,
+          "shrimp": 0,
+          "sliced_ham": 1,
+          "(미검출)": 0
+        },
+        "raw_pork": {
+          "apple": 0,
+          "bread": 2,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 17,
+          "shrimp": 0,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "shrimp": {
+          "apple": 0,
+          "bread": 0,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 3,
+          "sliced_ham": 0,
+          "(미검출)": 0
+        },
+        "sliced_ham": {
+          "apple": 0,
+          "bread": 1,
+          "carrot": 0,
+          "egg": 0,
+          "galic": 0,
+          "l_onion": 0,
+          "onion": 0,
+          "raw_pork": 0,
+          "shrimp": 0,
+          "sliced_ham": 7,
+          "(미검출)": 0
+        }
+      },
+      "metrics": [
+        {
+          "label": "apple",
+          "support": 7,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "bread",
+          "support": 7,
+          "precision": 0.7,
+          "recall": 1.0
+        },
+        {
+          "label": "carrot",
+          "support": 3,
+          "precision": 1.0,
+          "recall": 0.3333333333333333
+        },
+        {
+          "label": "egg",
+          "support": 9,
+          "precision": 0.9,
+          "recall": 1.0
+        },
+        {
+          "label": "galic",
+          "support": 6,
+          "precision": 0.75,
+          "recall": 1.0
+        },
+        {
+          "label": "l_onion",
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "onion",
+          "support": 10,
+          "precision": 1.0,
+          "recall": 0.6
+        },
+        {
+          "label": "raw_pork",
+          "support": 19,
+          "precision": 0.9444444444444444,
+          "recall": 0.8947368421052632
+        },
+        {
+          "label": "shrimp",
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        {
+          "label": "sliced_ham",
+          "support": 8,
+          "precision": 0.7777777777777778,
+          "recall": 0.875
+        }
+      ]
+    }
+  ]
+}
