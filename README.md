@@ -100,6 +100,27 @@ pnpm.cmd test:e2e
 
 설치된 Chrome을 사용하려면 `BROWSER_CHANNEL=chrome`을 환경변수로 지정할 수 있습니다. 브라우저 테스트는 4011·8445 포트에 테스트 서버를 자동 실행하고 임시 SQLite와 더미 영상으로 검증한 후 서버를 종료합니다. 포트가 이미 사용 중이면 해당 테스트 서버를 시작할 수 없습니다. 기본 Python 경로는 `backend/.venv`이며 `BACKEND_PYTHON`으로 변경할 수 있습니다.
 
+## Roboflow 모델 평가
+
+Roboflow 학습 화면은 Validation set 기준 지표만 보여줍니다. `scripts/evaluate_roboflow_models.py`는 실제 Test split으로 별도 평가해서 혼동행렬과 클래스별 Precision/Recall을 뽑아줍니다.
+
+1. Roboflow 프로젝트 → Versions → 평가할 버전 → "Download Dataset" → 포맷 **YOLOv8** 선택 → zip 다운로드(압축 풀 필요 없음).
+2. 프로젝트 루트에서 실행:
+
+   ```powershell
+   backend\.venv\Scripts\python.exe scripts/evaluate_roboflow_models.py --dataset ROBOFLOW_MODEL_ID=<export1.zip> --dataset ROBOFLOW_MODEL_ID_2=<export2.zip>
+   ```
+
+   `KEY`는 `backend/.env`의 변수명(그 값을 모델 ID로 사용) 또는 모델 ID 문자열을 직접 써도 됩니다. 모델마다 학습에 쓴 버전의 export를 따로 지정하세요. 결과는 `docs/test-results/roboflow-test-eval.md`(표)와 `roboflow-test-eval.json`(구조화된 데이터)에 저장됩니다.
+3. 그래프로 보려면 `docs/test-results/roboflow-test-eval.ipynb`를 여세요. 처음 한 번만 시각화용 패키지를 설치합니다.
+
+   ```powershell
+   uv pip install -r scripts/requirements-analysis.txt --python backend/.venv/Scripts/python.exe
+   backend\.venv\Scripts\python.exe -m ipykernel install --user --name oneul-mwo-damji --display-name "oneul-mwo-damji (.venv)"
+   ```
+
+   VS Code에서 노트북을 열고 커널을 `oneul-mwo-damji (.venv)`로 선택한 뒤 "Run All"을 누르면 혼동행렬 히트맵과 클래스별 Precision/Recall 막대그래프가 그려집니다. (`scripts/requirements-analysis.txt`는 시각화 전용이며 배포되는 백엔드 의존성과는 무관합니다.)
+
 ## 문서
 
 - [구현 기획서](docs/implementation-plan.md)
