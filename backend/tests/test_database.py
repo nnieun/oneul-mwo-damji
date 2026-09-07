@@ -38,3 +38,14 @@ def test_upgrade_preserves_existing_product_and_custom_recipe(tmp_path):
     assert db.recipes()[-1]['name'] == '사용자 요리'
     with db.connect() as c:
         assert c.execute('SELECT COUNT(*) FROM recipe_ingredients WHERE recipe_id=99').fetchone()[0] == 2
+
+def test_failed_migration_rolls_back_all_schema(tmp_path,monkeypatch):
+    db=Database(tmp_path/'rollback.db')
+    def fail(c):
+        raise RuntimeError('seed failed')
+    monkeypatch.setattr(db,'_seed',fail)
+    with pytest.raises(RuntimeError):
+        db.initialize()
+    with db.connect() as c:
+        assert c.execute('PRAGMA user_version').fetchone()[0]==0
+        assert c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()==[]

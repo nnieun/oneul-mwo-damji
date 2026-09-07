@@ -1,4 +1,4 @@
-﻿import json
+import json
 import time
 from uuid import uuid4
 from fastapi import APIRouter, Header, HTTPException
@@ -6,6 +6,8 @@ from .schemas import AddItem, Cart, Quantity
 
 
 def read_cart(c, cart_id):
+    if not c.in_transaction:
+        c.execute("BEGIN")
     row = c.execute('SELECT * FROM carts WHERE id=?', (cart_id,)).fetchone()
     if row is None:
         raise HTTPException(404, '장바구니를 찾을 수 없습니다.')

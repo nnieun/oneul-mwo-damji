@@ -1,4 +1,4 @@
-﻿from contextlib import contextmanager
+from contextlib import contextmanager
 import json
 from pathlib import Path
 import sqlite3
@@ -66,9 +66,10 @@ class Database:
                 ]:
                     if name not in {r['name'] for r in c.execute(f'PRAGMA table_info({table})')}:
                         c.execute(f'ALTER TABLE {table} ADD COLUMN {name} {definition}')
-                # executescript commits any pending transaction; all data seeding follows a new one.
-                c.executescript(SCHEMA)
-                c.execute('BEGIN IMMEDIATE')
+                # Keep DDL, seed data and schema version in the same transaction.
+                for statement in SCHEMA.split(";"):
+                    if statement.strip():
+                        c.execute(statement)
                 self._seed(c)
                 c.execute('PRAGMA user_version=1')
 
