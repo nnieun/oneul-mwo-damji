@@ -108,7 +108,7 @@ def router(db,model):
                 if pid in products and detection.confidence>=threshold and (pid not in best or detection.confidence>best[pid].confidence):
                     best[pid]=detection
             results=[]
-            for pid,detection in sorted(best.items()):
+            for pid,detection in sorted(best.items(),key=lambda item:item[1].confidence,reverse=True):
                 cid=str(uuid4())
                 position=detection.model_dump(exclude={'label','confidence'})
                 c.execute('INSERT INTO recognition_candidates VALUES (?,?,?,?,?,?,?)',(cid,scan_id,pid,detection.confidence,json.dumps(position),'pending',now+120))
