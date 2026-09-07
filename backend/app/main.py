@@ -152,6 +152,8 @@ def create_app(database: Database | None = None) -> FastAPI:
             recommendations.append(RecipeRecommendation(id=recipe["id"], name=recipe["name"], ingredients=required, matched=matched, missing=missing, time=recipe["cooking_time"]))
         return sorted(recommendations, key=lambda recipe: len(recipe.matched), reverse=True)
 
+    from .cart import router as cart_router
+    app.include_router(cart_router(db))
     return app
 
 
