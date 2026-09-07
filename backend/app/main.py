@@ -26,30 +26,6 @@ class CartEstimateResponse(BaseModel):
     item_count: int
 
 
-class Detection(BaseModel):
-    label: str
-    confidence: float = Field(ge=0, le=1)
-    x: float | None = None
-    y: float | None = None
-    width: float | None = None
-    height: float | None = None
-
-
-class RecognitionRequest(BaseModel):
-    detections: list[Detection] = Field(default_factory=list)
-    confidence_threshold: float = Field(default=0.75, ge=0, le=1)
-
-
-class RecognitionCandidate(BaseModel):
-    product: Product
-    confidence: float
-    position: dict[str, float | None]
-
-
-class RecognitionResponse(BaseModel):
-    candidates: list[RecognitionCandidate]
-
-
 class ConfirmCandidateRequest(BaseModel):
     product_id: int = Field(gt=0)
     quantity: int = Field(default=1, ge=1)
@@ -70,9 +46,13 @@ def create_app(database: Database | None = None, camera=None, model=None) -> Fas
     from .camera import Camera, router as camera_router
     camera = camera or Camera(demo=os.getenv("DEMO_MODE", "false").lower() == "true", device=int(os.getenv("CAMERA_DEVICE", "0")))
 
+    from .recognition import RoboflowModel, configure_labels, router as recognition_router
+    model = model or RoboflowModel(demo=camera.demo)
+
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         db.initialize()
+        configure_labels(db, model)
         try:
             yield
         finally:
@@ -89,6 +69,7 @@ def create_app(database: Database | None = None, camera=None, model=None) -> Fas
     )
     app.state.database = db
     app.state.camera = camera
+    app.state.model = model
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:8443", "http://127.0.0.1:8443"],
@@ -113,28 +94,6 @@ def create_app(database: Database | None = None, camera=None, model=None) -> Fas
         return CartEstimateResponse(
             total=sum(prices.get(item.product_id, 0) * item.quantity for item in request.items),
             item_count=sum(item.quantity for item in request.items),
-        )
-
-    @app.post("/api/recognition/candidates", response_model=RecognitionResponse, tags=["Recognition"])
-    def recognition_candidates(request: RecognitionRequest) -> RecognitionResponse:
-        products = {row["ingredient"]: Product(id=row["id"], name=row["name"], price=row["price"], ingredients=[row["ingredient"]]) for row in db.products()}
-        best_by_product: dict[int, tuple[Product, Detection]] = {}
-        for detection in request.detections:
-            product = products.get(detection.label)
-            if product is None or detection.confidence < request.confidence_threshold:
-                continue
-            current = best_by_product.get(product.id)
-            if current is None or detection.confidence > current[1].confidence:
-                best_by_product[product.id] = (product, detection)
-        return RecognitionResponse(
-            candidates=[
-                RecognitionCandidate(
-                    product=product,
-                    confidence=detection.confidence,
-                    position={"x": detection.x, "y": detection.y, "width": detection.width, "height": detection.height},
-                )
-                for product, detection in best_by_product.values()
-            ]
         )
 
     @app.post("/api/cart/items", response_model=CartEstimateResponse, tags=["Cart"], deprecated=True, summary="?? ?? ?? ?? API (???? ??)")
@@ -162,6 +121,7 @@ def create_app(database: Database | None = None, camera=None, model=None) -> Fas
     from .recipes import router as recipe_router
     app.include_router(recipe_router(db))
     app.include_router(camera_router(camera))
+    app.include_router(recognition_router(db, camera, model))
     return app
 
 
