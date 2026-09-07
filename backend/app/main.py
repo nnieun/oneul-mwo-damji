@@ -139,7 +139,7 @@ def create_app(database: Database | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다.")
         return CartEstimateResponse(total=prices[request.product_id] * request.quantity, item_count=request.quantity)
 
-    @app.get("/api/recipes", response_model=list[RecipeRecommendation], tags=["Recipes"])
+    @app.get("/api/recipes/legacy", response_model=list[RecipeRecommendation], tags=["Recipes"], deprecated=True, summary="?? ?? ??? ?? ??")
     def get_recipes(
         ingredients: Annotated[list[str] | None, Query(description="보유 재료 목록")] = None,
     ) -> list[RecipeRecommendation]:
@@ -154,6 +154,8 @@ def create_app(database: Database | None = None) -> FastAPI:
 
     from .cart import router as cart_router
     app.include_router(cart_router(db))
+    from .recipes import router as recipe_router
+    app.include_router(recipe_router(db))
     return app
 
 

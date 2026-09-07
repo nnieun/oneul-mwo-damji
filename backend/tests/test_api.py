@@ -39,7 +39,7 @@ def test_recognition_filters_low_confidence_and_deduplicates_product(client: Tes
 
 
 def test_recipes_are_sorted_by_owned_ingredients(client: TestClient) -> None:
-    response = client.get("/api/recipes", params=[("ingredients", "계란"), ("ingredients", "대파")])
+    response = client.get("/api/recipes/legacy", params=[("ingredients", "계란"), ("ingredients", "대파")])
     assert response.status_code == 200
     assert response.json()[0]["name"] == "계란볶음밥"
     assert response.json()[0]["matched"] == ["계란", "대파"]
