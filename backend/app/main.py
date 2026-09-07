@@ -64,8 +64,11 @@ class RecipeRecommendation(BaseModel):
     time: str
 
 
-def create_app(database: Database | None = None) -> FastAPI:
+def create_app(database: Database | None = None, camera=None, model=None) -> FastAPI:
     db = database or Database(os.getenv("DATABASE_PATH", "data/app.db"))
+
+    from .camera import Camera, router as camera_router
+    camera = camera or Camera(demo=os.getenv("DEMO_MODE", "false").lower() == "true", device=int(os.getenv("CAMERA_DEVICE", "0")))
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -73,6 +76,7 @@ def create_app(database: Database | None = None) -> FastAPI:
         try:
             yield
         finally:
+            camera.stop()
             db.close()
 
     app = FastAPI(
@@ -84,6 +88,7 @@ def create_app(database: Database | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.database = db
+    app.state.camera = camera
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:8443", "http://127.0.0.1:8443"],
@@ -156,6 +161,7 @@ def create_app(database: Database | None = None) -> FastAPI:
     app.include_router(cart_router(db))
     from .recipes import router as recipe_router
     app.include_router(recipe_router(db))
+    app.include_router(camera_router(camera))
     return app
 
 
