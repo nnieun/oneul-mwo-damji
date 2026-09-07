@@ -16,3 +16,13 @@ build/
 .venv/
 __pycache__/
 *.py[cod]
+
+# Local runtime and test artifacts
+backend/data/
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+*.db-shm
+*.db-wal
+!**/.env.example
