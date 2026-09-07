@@ -35,12 +35,6 @@ idna==3.19
     #   httpx
 iniconfig==2.3.0
     # via pytest
-numpy==2.2.6
-    # via
-    #   -r backend/requirements.txt
-    #   opencv-python-headless
-opencv-python-headless==4.11.0.86
-    # via -r backend/requirements.txt
 packaging==26.3
     # via pytest
 pluggy==1.6.0
@@ -53,6 +47,8 @@ pytest==8.3.4
     # via -r backend/requirements.txt
 python-dotenv==1.2.3
     # via uvicorn
+python-multipart==0.0.20
+    # via -r backend/requirements.txt
 pyyaml==6.0.3
     # via uvicorn
 starlette==0.41.3

@@ -127,7 +127,7 @@
 
 - Swagger UI: `http://localhost:4000/docs`
 - OpenAPI JSON: `http://localhost:4000/openapi.json`
-- 그룹: Health, Products, Camera, Recognition, Cart, Recipes
+- 그룹: Health, Products, Recognition, Cart, Recipes
 - 모든 API에 설명, 요청·응답 모델, 예시, 오류 응답을 작성한다.
 - 기능 변경 시 Swagger 문서를 함께 갱신한다.
 
@@ -137,11 +137,8 @@
 | --- | --- | --- |
 | GET | /api/health | 서버 상태 |
 | GET | /api/products | 상품 목록·검색 |
-| POST | /api/camera/start | 카메라 시작 |
-| POST | /api/camera/stop | 카메라 종료 |
-| GET | /api/camera/status | 연결·오류 상태 |
-| GET | /api/camera/stream | 미리보기 스트림 |
-| POST | /api/recognition/scan | 최신 프레임 추론 및 후보 생성 |
+| GET | /api/recognition/config | 인식 모드(더미·실제) 확인 |
+| POST | /api/recognition/scan | 브라우저 카메라로 촬영한 프레임 업로드·추론 및 후보 생성 |
 | POST | /api/recognition/candidates | 기존 탐지 결과 변환 API 유지 |
 | POST | /api/recognition/candidates/{candidate_id}/dismiss | 후보 제외 |
 | POST | /api/carts | 장바구니 생성 |

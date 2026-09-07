@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .db import Database
 from .schemas import Product, ERRORS
-from .camera import Camera, router as camera_router
 from .recognition import RoboflowModel, configure_labels, router as recognition_router
 from .cart import router as cart_router
 from .recipes import router as recipe_router
@@ -35,10 +34,9 @@ class RecipeRecommendation(BaseModel):
     time: str
 
 
-def create_app(database: Database | None = None, camera=None, model=None) -> FastAPI:
+def create_app(database: Database | None = None, model=None) -> FastAPI:
     db=database or Database(os.getenv('DATABASE_PATH','data/app.db'))
-    camera=camera or Camera(demo=os.getenv('DEMO_MODE','false').lower()=='true',device=int(os.getenv('CAMERA_DEVICE','0')))
-    model=model or RoboflowModel(demo=camera.demo)
+    model=model or RoboflowModel(demo=os.getenv('DEMO_MODE','false').lower()=='true')
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -47,20 +45,18 @@ def create_app(database: Database | None = None, camera=None, model=None) -> Fas
             configure_labels(db,model)
             yield
         finally:
-            camera.stop()
             db.close()
 
     app=FastAPI(
         title='오늘 뭐 담지 API',
-        description='SQLite 장바구니, OpenCV 카메라, Roboflow 상품 인식 및 재료 기반 요리 추천. 금액과 레시피는 시연용입니다.',
+        description='SQLite 장바구니, 브라우저 카메라 기반 Roboflow 상품 인식 및 재료 기반 요리 추천. 금액과 레시피는 시연용입니다.',
         version='1.0.0',responses=ERRORS,lifespan=lifespan,
         openapi_tags=[{'name':name,'description':description} for name,description in [
             ('Health','서버 상태'),('Products','시연 상품과 가격'),('Cart','저장된 장바구니와 예상 금액'),
-            ('Recipes','레시피 상세 및 장바구니 재료 추천'),('Camera','백엔드 PC 카메라 제어 및 미리보기'),('Recognition','사용자 확인 전 인식 후보'),
+            ('Recipes','레시피 상세 및 장바구니 재료 추천'),('Recognition','브라우저 카메라 프레임 기반 인식 후보'),
         ]],
     )
     app.state.database=db
-    app.state.camera=camera
     app.state.model=model
     origins=os.getenv('CORS_ORIGINS','http://localhost:8443,http://127.0.0.1:8443')
     app.add_middleware(CORSMiddleware,allow_origins=[s.strip() for s in origins.split(',') if s.strip()],allow_credentials=False,allow_methods=['GET','POST','PATCH','DELETE'],allow_headers=['Content-Type','Idempotency-Key'])
@@ -98,8 +94,7 @@ def create_app(database: Database | None = None, camera=None, model=None) -> Fas
 
     app.include_router(cart_router(db))
     app.include_router(recipe_router(db))
-    app.include_router(camera_router(camera))
-    app.include_router(recognition_router(db,camera,model))
+    app.include_router(recognition_router(db,model))
     return app
 
 app=create_app()

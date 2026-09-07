@@ -1,7 +1,8 @@
 ﻿import { useCallback, useEffect, useRef, useState } from 'react'
-import { API_BASE, ApiError, post, request, requestKey, type CameraStatus, type Candidate, type Cart, type Product, type Recipe, type Recommendations, type Scan } from './api'
+import { ApiError, post, postImage, request, requestKey, type Candidate, type Cart, type Product, type Recipe, type RecognitionConfig, type Recommendations, type Scan } from './api'
 
 type Tab = 'scan' | 'cart' | 'recipe'
+type CameraState = { state: 'stopped' | 'starting' | 'running' | 'error'; message: string }
 type PendingAdd = { product_id: number; quantity: number; candidate_id?: string; key: string }
 const won = (amount: number) => `${amount.toLocaleString('ko-KR')}원`
 
@@ -10,7 +11,11 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('scan')
   const [cart, setCart] = useState<Cart | null>(null)
   const [products, setProducts] = useState<Product[]>([])
-  const [camera, setCamera] = useState<CameraStatus>({ state: 'stopped', mode: 'live', message: '카메라 상태를 확인해 주세요.' })
+  const [config, setConfig] = useState<RecognitionConfig>({ mode: 'live', message: '인식 모드를 확인해 주세요.' })
+  const [camera, setCamera] = useState<CameraState>({ state: 'stopped', message: '카메라를 시작해 주세요.' })
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [recommendations, setRecommendations] = useState<Recommendations | null>(null)
   const [recipeError, setRecipeError] = useState('')
@@ -39,13 +44,13 @@ export default function App() {
 
   async function initialize() {
     await action(async () => {
-      const [catalog, status] = await Promise.all([request<Product[]>('/api/products'), request<CameraStatus>('/api/camera/status')])
+      const [catalog, recognitionConfig] = await Promise.all([request<Product[]>('/api/products'), request<RecognitionConfig>('/api/recognition/config')])
       let active: Cart
       try { active = await request<Cart>('/api/carts/active') }
       catch (e) { if (!(e instanceof ApiError) || e.status !== 404) throw e; active = await post<Cart>('/api/carts') }
       setProducts(catalog)
       if (catalog.length) setSelected(String(catalog[0].id))
-      setCamera(status)
+      setConfig(recognitionConfig)
       applyCart(active)
     })
   }
@@ -57,17 +62,44 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started])
 
-  useEffect(() => {
-    if (!started) return
-    let alive = true
-    const timer = setInterval(() => {
-      if (guard.current) return
-      void request<CameraStatus>('/api/camera/status').then(status => { if (alive) setCamera(status) }).catch(() => {
-        if (alive) setCamera(old => ({ ...old, state: 'error', message: '카메라 상태를 확인할 수 없습니다. 서버 연결을 확인해 주세요.' }))
-      })
-    }, 2500)
-    return () => { alive = false; clearInterval(timer) }
-  }, [started])
+  useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()) }, [])
+
+  async function startCamera() {
+    if (config.mode === 'demo') { setCamera({ state: 'running', message: '더미 모드입니다. 실제 카메라를 사용하지 않아요.' }); return }
+    setCamera({ state: 'starting', message: '카메라 연결 중입니다.' })
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      streamRef.current = stream
+      stream.getVideoTracks()[0]?.addEventListener('ended', () => setCamera({ state: 'error', message: '카메라 연결이 끊겼습니다. 다시 시작해 주세요.' }))
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      setCamera({ state: 'running', message: '카메라 연결됨' })
+    } catch {
+      setCamera({ state: 'error', message: '카메라 접근 권한이 필요합니다. 브라우저에서 이 사이트의 카메라 사용을 허용해 주세요.' })
+    }
+  }
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+    if (videoRef.current) videoRef.current.srcObject = null
+    setCamera({ state: 'stopped', message: '카메라가 종료되었습니다.' })
+  }
+
+  function captureFrame(): Promise<Blob> {
+    const canvas = canvasRef.current
+    if (!canvas) return Promise.reject(new Error('캡처를 사용할 수 없습니다.'))
+    if (config.mode === 'demo' || !videoRef.current) {
+      canvas.width = 320; canvas.height = 240
+      const ctx = canvas.getContext('2d')
+      if (ctx) { ctx.fillStyle = '#28211a'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText('DEMO', 130, 124) }
+    } else {
+      const video = videoRef.current
+      canvas.width = video.videoWidth || 320
+      canvas.height = video.videoHeight || 240
+      canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    }
+    return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('캡처에 실패했습니다.')), 'image/jpeg', 0.85))
+  }
 
   useEffect(() => {
     if (!cart) return
@@ -107,7 +139,8 @@ export default function App() {
 
   function scan() {
     void action(async () => {
-      const result = await post<Scan>('/api/recognition/scan')
+      const frame = await captureFrame()
+      const result = await postImage<Scan>('/api/recognition/scan', frame)
       setCandidates(result.candidates)
       setNotice(`${result.mode === 'demo' ? '더미 인식 · ' : ''}${result.message}`)
     })
@@ -117,7 +150,7 @@ export default function App() {
   if (!started) return <div className="app-shell splash">
     <div className="brand-icon">🛒</div><h1>오늘 뭐 담지</h1><p className="muted">AI가 인식하는 스마트 카트</p>
     <div className="feature-list">{[['📸', '상품 인식', '카메라로 스캔하고 직접 확인해요'], ['💰', '예상 금액 확인', '담은 상품의 금액을 바로 확인해요'], ['🍽️', '요리 추천', '담은 재료로 만들 요리를 찾아요']].map(([icon, title, text]) => <div className="card feature" key={title}><span>{icon}</span><div><strong>{title}</strong><p className="muted">{text}</p></div></div>)}</div>
-    <button className="primary full" onClick={() => setStarted(true)}>쇼핑 시작하기</button><small className="muted">백엔드 PC의 카메라 사용 · 시연용 프로토타입</small>
+    <button className="primary full" onClick={() => setStarted(true)}>쇼핑 시작하기</button><small className="muted">접속 기기의 카메라 사용 · 시연용 프로토타입</small>
   </div>
 
   return <div className="app-shell">
@@ -130,10 +163,11 @@ export default function App() {
       {cart && <>
         {tab === 'scan' && <>
           <div className="camera-panel">
-            {camera.state === 'running' ? <img src={`${API_BASE}/api/camera/stream`} alt={camera.mode === 'demo' ? '더미 카메라 미리보기' : '카트 카메라 실시간 영상'} onError={() => setCamera(old => ({ ...old, state: 'error', message: '미리보기 연결이 끊겼습니다. 다시 시작해 주세요.' }))} /> : <div className="camera-placeholder"><span>📷</span><p>{camera.message}</p></div>}
-            <span className={`camera-badge ${camera.state === 'running' ? 'active' : ''}`}>{camera.mode === 'demo' ? '더미 모드 · 실제 인식 아님' : '실제 카메라'} · {camera.state === 'running' ? '연결됨' : '연결 대기'}</span>
+            {camera.state === 'running' && config.mode === 'live' ? <video ref={videoRef} autoPlay playsInline muted aria-label="카트 카메라 실시간 영상" /> : camera.state === 'running' ? <div className="camera-placeholder"><span>🧪</span><p>더미 모드 · 실제 인식 아님</p></div> : <div className="camera-placeholder"><span>📷</span><p>{camera.message}</p></div>}
+            <span className={`camera-badge ${camera.state === 'running' ? 'active' : ''}`}>{config.mode === 'demo' ? '더미 모드 · 실제 인식 아님' : '실제 카메라'} · {camera.state === 'running' ? '연결됨' : '연결 대기'}</span>
           </div>
-          <div className="button-row"><button disabled={blocked} onClick={() => void action(async () => { setCamera(await post<CameraStatus>(`/api/camera/${camera.state === 'running' ? 'stop' : 'start'}`)) })}>{camera.state === 'running' ? '카메라 종료' : '카메라 시작'}</button><button className="primary" disabled={blocked || camera.state !== 'running'} onClick={scan}>상품 스캔</button></div>
+          <canvas ref={canvasRef} hidden />
+          <div className="button-row"><button disabled={blocked} onClick={() => void action(async () => { if (camera.state === 'running') stopCamera(); else await startCamera() })}>{camera.state === 'running' ? '카메라 종료' : '카메라 시작'}</button><button className="primary" disabled={blocked || camera.state !== 'running'} onClick={scan}>상품 스캔</button></div>
           <button className="summary compact" onClick={() => setTab('cart')}><span>예상 구매금액 · {cart.item_count}개</span><strong>{won(cart.total)} →</strong></button>
           <div className="section-heading"><h2>인식 후보</h2><span className="muted">{candidates.length}개 대기</span></div><p className="muted">확인 후 담거나 제외하세요. 잘못 인식하면 상품을 바꿀 수 있어요.</p>
           {candidates.length === 0 ? <div className="card empty"><span>🔍</span><p>상품을 스캔하면 후보가 나타나요.</p></div> : candidates.map(candidate => <CandidateCard key={candidate.candidate_id} candidate={candidate} products={products} disabled={blocked} onAdd={id => add(id, candidate.candidate_id)} onDismiss={() => void action(async () => { await post(`/api/recognition/candidates/${candidate.candidate_id}/dismiss`); setCandidates(old => old.filter(c => c.candidate_id !== candidate.candidate_id)) })} />)}

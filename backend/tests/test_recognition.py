@@ -8,21 +8,23 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from app.main import create_app
 from app.db import Database
-from app.camera import Camera
 from app.recognition import RoboflowModel
 
 @pytest.fixture
 def client(tmp_path):
-    with TestClient(create_app(Database(tmp_path/'scan.db'),camera=Camera(demo=True))) as c:
+    with TestClient(create_app(Database(tmp_path/'scan.db'),model=RoboflowModel(demo=True))) as c:
         yield c
 
 def supplied(c,detections):
     return c.post('/api/recognition/candidates',json={'detections':detections})
 
+def scan(c,frame=b'\xff\xd8\xff\xe0fake-browser-frame'):
+    return c.post('/api/recognition/scan',files={'image':('frame.jpg',frame,'image/jpeg')})
+
 def test_scan_lifecycle_confirmation_correction_and_duplicate(client):
-    assert client.post('/api/recognition/scan').status_code==503
-    client.post('/api/camera/start')
-    result=client.post('/api/recognition/scan').json()
+    assert client.get('/api/recognition/config').json()=={'mode':'demo','message':'더미 모드입니다. 브라우저 카메라 없이도 스캔을 확인할 수 있습니다.'}
+    assert client.post('/api/recognition/scan').status_code==422
+    result=scan(client).json()
     assert result['mode']=='demo' and len(result['candidates'])==3
     cid=client.post('/api/carts').json()['id']
     assert client.get(f'/api/carts/{cid}').json()['total']==0
@@ -81,7 +83,6 @@ def test_model_http_contract_and_missing_configuration():
     assert error.value.status_code==503
 
 def test_scan_lock_released_on_error(client):
-    client.post('/api/camera/start')
     entered,finish=Event(),Event()
     original=client.app.state.model.infer
     def delayed(jpeg):
@@ -90,10 +91,10 @@ def test_scan_lock_released_on_error(client):
         raise HTTPException(504,'timeout')
     client.app.state.model.infer=delayed
     with ThreadPoolExecutor() as pool:
-        pending=pool.submit(client.post,'/api/recognition/scan')
+        pending=pool.submit(scan,client)
         assert entered.wait(2)
-        assert client.post('/api/recognition/scan').status_code==409
+        assert scan(client).status_code==409
         finish.set()
         assert pending.result().status_code==504
     client.app.state.model.infer=original
-    assert client.post('/api/recognition/scan').status_code==200
+    assert scan(client).status_code==200

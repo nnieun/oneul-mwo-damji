@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "오늘 뭐 담지 API",
-    "description": "SQLite 장바구니, OpenCV 카메라, Roboflow 상품 인식 및 재료 기반 요리 추천. 금액과 레시피는 시연용입니다.",
+    "description": "SQLite 장바구니, 브라우저 카메라 기반 Roboflow 상품 인식 및 재료 기반 요리 추천. 금액과 레시피는 시연용입니다.",
     "version": "1.0.0"
   },
   "paths": {
@@ -47,6 +47,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -137,6 +147,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -236,6 +256,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -321,6 +351,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -439,6 +479,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -520,6 +570,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -583,6 +643,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -665,6 +735,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -787,6 +867,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -898,6 +988,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -997,6 +1097,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -1082,6 +1192,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -1156,6 +1276,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -1257,6 +1387,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -1300,20 +1440,21 @@
         }
       }
     },
-    "/api/camera/status": {
+    "/api/recognition/config": {
       "get": {
         "tags": [
-          "Camera"
+          "Recognition"
         ],
-        "summary": "카메라 연결 상태 및 더미 여부",
-        "operationId": "status_api_camera_status_get",
+        "summary": "인식 모드 확인",
+        "description": "더미 모드인지, 브라우저 카메라로 실제 인식을 수행하는지 확인합니다.",
+        "operationId": "config_api_recognition_config_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CameraStatus"
+                  "$ref": "#/components/schemas/RecognitionConfig"
                 }
               }
             }
@@ -1338,207 +1479,8 @@
               }
             }
           },
-          "503": {
-            "description": "장치 또는 서비스 사용 불가",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "모델 응답 시간 초과",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "모델 응답 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/camera/start": {
-      "post": {
-        "tags": [
-          "Camera"
-        ],
-        "summary": "백엔드 PC의 카메라 시작",
-        "operationId": "start_api_camera_start_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CameraStatus"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "대상을 찾을 수 없음",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "상태 충돌 또는 중복 요청 내용 불일치",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "장치 또는 서비스 사용 불가",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "모델 응답 시간 초과",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "모델 응답 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/camera/stop": {
-      "post": {
-        "tags": [
-          "Camera"
-        ],
-        "summary": "카메라 종료 및 장치 자원 해제",
-        "operationId": "stop_api_camera_stop_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CameraStatus"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "대상을 찾을 수 없음",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "상태 충돌 또는 중복 요청 내용 불일치",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "장치 또는 서비스 사용 불가",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "모델 응답 시간 초과",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "모델 응답 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/camera/stream": {
-      "get": {
-        "tags": [
-          "Camera"
-        ],
-        "summary": "MJPEG 미리보기",
-        "operationId": "stream_api_camera_stream_get",
-        "responses": {
-          "200": {
-            "description": "JPEG 프레임 스트림",
-            "content": {
-              "multipart/x-mixed-replace": {}
-            }
-          },
-          "404": {
-            "description": "대상을 찾을 수 없음",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "상태 충돌 또는 중복 요청 내용 불일치",
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -1585,9 +1527,19 @@
         "tags": [
           "Recognition"
         ],
-        "summary": "최신 카메라 프레임으로 상품 인식",
-        "description": "추론 요청은 한 번에 하나만 처리합니다. 후보는 120초 동안 유효하며 장바구니에 자동 추가하지 않습니다.",
+        "summary": "브라우저 카메라로 촬영한 프레임으로 상품 인식",
+        "description": "접속 기기의 카메라로 촬영한 JPEG 프레임을 업로드해 인식합니다. 추론 요청은 한 번에 하나만 처리합니다. 후보는 120초 동안 유효하며 장바구니에 자동 추가하지 않습니다.",
         "operationId": "scan_api_recognition_scan_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_scan_api_recognition_scan_post"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1611,6 +1563,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -1645,6 +1607,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1693,6 +1665,16 @@
           },
           "409": {
             "description": "상태 충돌 또는 중복 요청 내용 불일치",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "업로드 용량 초과",
             "content": {
               "application/json": {
                 "schema": {
@@ -1793,6 +1775,16 @@
               }
             }
           },
+          "413": {
+            "description": "업로드 용량 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "장치 또는 서비스 사용 불가",
             "content": {
@@ -1876,28 +1868,20 @@
           "quantity": 1
         }
       },
-      "CameraStatus": {
+      "Body_scan_api_recognition_scan_post": {
         "properties": {
-          "state": {
+          "image": {
             "type": "string",
-            "title": "State"
-          },
-          "mode": {
-            "type": "string",
-            "title": "Mode"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
+            "format": "binary",
+            "title": "Image",
+            "description": "브라우저 카메라로 촬영한 JPEG 프레임"
           }
         },
         "type": "object",
         "required": [
-          "state",
-          "mode",
-          "message"
+          "image"
         ],
-        "title": "CameraStatus"
+        "title": "Body_scan_api_recognition_scan_post"
       },
       "Candidate": {
         "properties": {
@@ -2388,6 +2372,24 @@
         ],
         "title": "RecipeRecommendation"
       },
+      "RecognitionConfig": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "message"
+        ],
+        "title": "RecognitionConfig"
+      },
       "RecognitionRequest": {
         "properties": {
           "detections": {
@@ -2619,12 +2621,8 @@
       "description": "레시피 상세 및 장바구니 재료 추천"
     },
     {
-      "name": "Camera",
-      "description": "백엔드 PC 카메라 제어 및 미리보기"
-    },
-    {
       "name": "Recognition",
-      "description": "사용자 확인 전 인식 후보"
+      "description": "브라우저 카메라 프레임 기반 인식 후보"
     }
   ]
 }

@@ -64,3 +64,63 @@ Error: Build failed with 1 error:
 - PASS: required/optional ingredients and recipe detail rendered from API
 - PASS: quantity, delete, server total and shopping summary
 - PASS: reload persistence, mobile overflow, camera shutdown, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T02:42:13.455Z
+- Base commit: f4f2f18 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: FAIL
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- FAIL: browserType.launch: Executable doesn't exist at C:\Users\Admin\AppData\Local\ms-playwright\chromium_headless_shell-1234\chrome-headless-shell-win64\chrome-headless-shell.exe
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     pnpm exec playwright install                           ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+    at C:\worksapces\oneul-mwo-damji\frontend\tests\e2e.mjs:44:26
+
+# Browser integration run
+
+- Started: 2026-09-07T02:42:47.881Z
+- Base commit: f4f2f18 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: FAIL
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- FAIL: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: '카메라 종료', exact: true })[22m
+
+    at C:\worksapces\oneul-mwo-damji\frontend\tests\e2e.mjs:101:61
+
+# Browser integration run
+
+- Started: 2026-09-07T02:44:26.764Z
+- Base commit: f4f2f18 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors

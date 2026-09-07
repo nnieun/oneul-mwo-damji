@@ -1,6 +1,6 @@
 ﻿# FastAPI 백엔드
 
-실행 방법은 [프로젝트 README](../README.md)를 참고하세요. 단일 프로세스·단일 활성 장바구니를 대상으로 합니다. 여러 Uvicorn worker를 실행하면 카메라 소유권이 충돌할 수 있으므로 worker는 하나를 사용합니다.
+실행 방법은 [프로젝트 README](../README.md)를 참고하세요. 단일 프로세스·단일 활성 장바구니를 대상으로 합니다. 카메라 촬영은 브라우저(접속 기기)에서 이루어지며, 백엔드는 업로드된 프레임을 Roboflow로 전달하는 역할만 합니다.
 
 ## API 문서
 
@@ -9,13 +9,14 @@
 - 저장된 명세: [docs/openapi.json](../docs/openapi.json)
 - 명세 갱신: 루트에서 `backend\.venv\Scripts\python.exe scripts/export_openapi.py`
 
-각 경로의 요청·응답 모델, 설명, 오류는 Swagger에 포함됩니다. MJPEG는 지속되는 영상 응답이므로 앱 미리보기로 확인하세요.
+각 경로의 요청·응답 모델, 설명, 오류는 Swagger에 포함됩니다.
 
 ## 핵심 계약
 
 - `POST /api/carts`는 활성 장바구니가 없으면 만들고, 있으면 기존 장바구니를 반환합니다.
 - `POST /api/carts/{cart_id}/items`에는 8~128자 `Idempotency-Key` 헤더가 필수입니다.
 - 같은 키와 같은 본문을 재전송하면 최초 응답을 반환합니다. 내용이 달라지면 409입니다. 재전송 응답 뒤 GET으로 최신 장바구니를 다시 조회하세요.
+- `POST /api/recognition/scan`은 `multipart/form-data`로 `image` 필드(브라우저 카메라로 촬영한 JPEG)를 받습니다. 더미 모드에서는 내용을 사용하지 않지만 필드는 여전히 필요합니다.
 - `candidate_id`를 지정하면 후보가 미처리·유효한지 확인하고 장바구니 저장과 함께 확정합니다. 다른 `product_id`를 보내 오인식을 수정할 수 있습니다.
 - 후보는 120초 동안 유효합니다. 확정·제외·만료 후보는 다시 사용할 수 없습니다.
 - 수량은 1~999의 정수입니다. PATCH는 최종 수량을 설정하고 삭제는 DELETE를 사용합니다.
@@ -39,25 +40,23 @@ SQLite 파일은 기본 `data/app.db`입니다. 기존 파일이 있으면 스�
 
 ## 실제 장치 테스트
 
-프로젝트 루트 PowerShell에서:
+카메라 촬영은 브라우저에서 이루어지므로, 실제 카메라 자체는 `pnpm test:e2e`(브라우저 카메라 시작·종료 UI 확인)와 실제 기기로 앱을 열어보는 수동 시연으로 확인합니다. 백엔드에서 확인할 대상은 Roboflow 추론 하나뿐입니다.
 
-```powershell
-$env:RUN_CAMERA_TESTS = '1'
-backend\.venv\Scripts\python.exe scripts/test_report.py H01-camera tests/test_hardware.py -k physical_camera_capture
-```
-
-실제 모델 검증은 `ROBOFLOW_MODEL_ID`, `ROBOFLOW_API_KEY`, `CAMERA_DEVICE`를 테스트 프로세스 환경변수로 설정하고 실행합니다. pytest는 `.env`를 자동으로 읽지 않습니다.
+브라우저 카메라 미리보기로 촬영한 JPEG 파일을 준비한 뒤, 프로젝트 루트 PowerShell에서:
 
 ```powershell
 $env:RUN_LIVE_MODEL_TESTS = '1'
-backend\.venv\Scripts\python.exe scripts/test_report.py H02-model tests/test_hardware.py -k physical_camera_and_roboflow
+$env:SAMPLE_IMAGE_PATH = 'C:\path\to\captured-frame.jpg'
+backend\.venv\Scripts\python.exe scripts/test_report.py H02-model tests/test_hardware.py -k live_roboflow_inference
 ```
 
-기본 전체 테스트에서 이 두 항목은 SKIP입니다. 하드웨어 테스트는 연결·응답 형식 검증이며 인식 정확도나 mAP 측정을 대신하지 않습니다.
+실제 모델 검증은 `ROBOFLOW_MODEL_ID`, `ROBOFLOW_API_KEY`를 테스트 프로세스 환경변수로 설정하고 실행합니다. pytest는 `.env`를 자동으로 읽지 않습니다.
+
+기본 전체 테스트에서 이 항목은 SKIP입니다. 하드웨어 테스트는 연결·응답 형식 검증이며 인식 정확도나 mAP 측정을 대신하지 않습니다.
 
 ## 기술 참고
 
 - [FastAPI Swagger 설정](https://fastapi.tiangolo.com/tutorial/metadata/)
 - [FastAPI 테스트 수명 주기](https://fastapi.tiangolo.com/advanced/testing-events/)
-- [OpenCV VideoCapture](https://docs.opencv.org/4.10.0/d8/dfe/classcv_1_1VideoCapture.html)
+- [MDN MediaDevices.getUserMedia()](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 - [Roboflow Hosted Object Detection 요청 형식](https://docs.roboflow.com/deploy/serverless/object-detection)

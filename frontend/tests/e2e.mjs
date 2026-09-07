@@ -98,11 +98,13 @@ try {
   await page.getByRole('button',{name:'쇼핑 시작하기'}).click()
   await page.getByText('8,900원 →',{exact:true}).waitFor()
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true)
+  // The browser camera is per-page-session, so a reload starts it stopped again.
+  await page.getByRole('button',{name:'카메라 시작',exact:true}).waitFor()
+  await page.getByRole('button',{name:'카메라 시작',exact:true}).click()
   await page.getByRole('button',{name:'카메라 종료',exact:true}).click()
   await page.getByRole('button',{name:'카메라 시작',exact:true}).waitFor()
-  assert.equal((await (await fetch('http://127.0.0.1:4011/api/camera/status')).json()).state,'stopped')
   assert.deepEqual(errors,[])
-  results.push('PASS: reload persistence, mobile overflow, camera shutdown, no browser runtime errors')
+  results.push('PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors')
 } catch(error){ failure=error; results.push(`FAIL: ${error.stack}`) }
 finally {
   if(browser) await browser.close()

@@ -6,9 +6,11 @@ from threading import Lock
 import time
 from uuid import uuid4
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field, ValidationError
 from .schemas import Product
+
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 class Detection(BaseModel):
     label: str = Field(min_length=1,max_length=200)
@@ -36,6 +38,10 @@ class RecognitionResponse(BaseModel):
     mode: str
     message: str
 
+class RecognitionConfig(BaseModel):
+    mode: str
+    message: str
+
 class RoboflowModel:
     def __init__(self, demo=False, client=None, model_id=None, api_key=None):
         self.demo=demo
@@ -46,7 +52,7 @@ class RoboflowModel:
     def infer(self,jpeg):
         if self.demo:
             return [Detection(label=label,confidence=confidence,x=100+idx*150,y=200,width=100,height=140) for idx,(label,confidence) in enumerate([('egg',0.96),('tofu',0.91),('green_onion',0.87)])]
-        if not self.api_key or not re.fullmatch(r'[A-Za-z0-9_-]+/\d+',self.model_id):
+        if not self.api_key or not re.fullmatch(r'[A-Za-z0-9_-]+/[A-Za-z0-9_-]+',self.model_id):
             raise HTTPException(503,'Roboflow 모델 ID와 API 키를 백엔드 환경변수에 설정해 주세요.')
         def call(client):
             response=client.post(f'https://detect.roboflow.com/{self.model_id}',params={'api_key':self.api_key,'confidence':0},content=base64.b64encode(jpeg),headers={'Content-Type':'application/x-www-form-urlencoded'},timeout=15)
@@ -79,7 +85,7 @@ def configure_labels(db, model):
             c.execute('INSERT INTO product_labels VALUES (?,?,?) ON CONFLICT(model_version,label) DO UPDATE SET product_id=excluded.product_id',(model.model_id,label,pid))
 
 
-def router(db,camera,model):
+def router(db,model):
     api=APIRouter(prefix='/api/recognition',tags=['Recognition'])
     scan_lock=Lock()
     threshold=float(os.getenv('CONFIDENCE_THRESHOLD','0.75'))
@@ -108,12 +114,22 @@ def router(db,camera,model):
                 results.append(dict(candidate_id=cid,product=products[pid],confidence=detection.confidence,position=position,status='pending',expires_at=now+120))
             return dict(scan_id=scan_id,candidates=results,mode=mode,message=f'{len(results)}개 후보를 확인해 주세요.' if results else '등록된 상품을 인식하지 못했습니다. 다시 스캔하거나 직접 선택해 주세요.')
 
-    @api.post('/scan',response_model=RecognitionResponse,summary='최신 카메라 프레임으로 상품 인식',description='추론 요청은 한 번에 하나만 처리합니다. 후보는 120초 동안 유효하며 장바구니에 자동 추가하지 않습니다.')
-    def scan():
+    @api.get('/config',response_model=RecognitionConfig,summary='인식 모드 확인',description='더미 모드인지, 브라우저 카메라로 실제 인식을 수행하는지 확인합니다.')
+    def config():
+        if model.demo:
+            return dict(mode='demo',message='더미 모드입니다. 브라우저 카메라 없이도 스캔을 확인할 수 있습니다.')
+        return dict(mode='live',message='브라우저에서 카메라 사용을 허용한 뒤 상품을 스캔해 주세요.')
+
+    @api.post('/scan',response_model=RecognitionResponse,summary='브라우저 카메라로 촬영한 프레임으로 상품 인식',description='접속 기기의 카메라로 촬영한 JPEG 프레임을 업로드해 인식합니다. 추론 요청은 한 번에 하나만 처리합니다. 후보는 120초 동안 유효하며 장바구니에 자동 추가하지 않습니다.')
+    def scan(image: UploadFile = File(...,description='브라우저 카메라로 촬영한 JPEG 프레임')):
         if not scan_lock.acquire(blocking=False):
             raise HTTPException(409,'이미 인식 중입니다. 잠시 기다려 주세요.')
         try:
-            jpeg=camera.snapshot()
+            jpeg=image.file.read()
+            if not jpeg:
+                raise HTTPException(422,'카메라 프레임이 비어 있습니다. 카메라를 다시 시작해 주세요.')
+            if len(jpeg)>MAX_IMAGE_BYTES:
+                raise HTTPException(413,'이미지 용량이 너무 큽니다.')
             return candidates(model.infer(jpeg),threshold,'demo' if model.demo else 'live')
         finally:
             scan_lock.release()

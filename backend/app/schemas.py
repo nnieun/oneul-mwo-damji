@@ -11,7 +11,7 @@ class Product(BaseModel):
 class ErrorResponse(BaseModel):
     detail: str = Field(examples=['상품을 찾을 수 없습니다.'])
 
-ERRORS = {code: {'model': ErrorResponse, 'description': message} for code, message in [(404,'대상을 찾을 수 없음'), (409,'상태 충돌 또는 중복 요청 내용 불일치'), (503,'장치 또는 서비스 사용 불가'), (504,'모델 응답 시간 초과'), (502,'모델 응답 오류')]}
+ERRORS = {code: {'model': ErrorResponse, 'description': message} for code, message in [(404,'대상을 찾을 수 없음'), (409,'상태 충돌 또는 중복 요청 내용 불일치'), (413,'업로드 용량 초과'), (503,'장치 또는 서비스 사용 불가'), (504,'모델 응답 시간 초과'), (502,'모델 응답 오류')]}
 
 class CartLine(BaseModel):
     product_id: int
