@@ -9,11 +9,7 @@ from pydantic import BaseModel, Field
 from .db import Database
 
 
-class Product(BaseModel):
-    id: int
-    name: str
-    price: int
-    ingredients: list[str]
+from .schemas import Product, ERRORS
 
 
 class CartItem(BaseModel):
@@ -74,12 +70,17 @@ def create_app(database: Database | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         db.initialize()
-        yield
+        try:
+            yield
+        finally:
+            db.close()
 
     app = FastAPI(
         title="오늘 뭐 담지 API",
         description="AI 스마트 마트카트 MVP를 위한 상품·인식·장바구니·요리 추천 API",
-        version="0.2.0",
+        version="1.0.0",
+        responses=ERRORS,
+        openapi_tags=[{"name": name} for name in ["Health", "Products", "Cart", "Recipes", "Camera", "Recognition"]],
         lifespan=lifespan,
     )
     app.state.database = db
@@ -91,23 +92,25 @@ def create_app(database: Database | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.get("/api/health")
+    @app.get("/api/health", tags=["Health"], summary="?? ?? ??")
     def health() -> dict[str, str | bool]:
         return {"ok": True, "service": "oneul-mwo-damji-backend"}
 
-    @app.get("/api/products", response_model=list[Product])
-    def get_products() -> list[Product]:
-        return [Product(id=row["id"], name=row["name"], price=row["price"], ingredients=[row["ingredient"]]) for row in db.products()]
+    @app.get("/api/products", response_model=list[Product], tags=["Products"], summary="?? ?? ? ?? ??")
+    def get_products(q: str = Query(default="", max_length=100, description="??? ???")):
+        return [Product(**row) for row in db.products() if q.casefold() in row["name"].casefold()]
 
-    @app.post("/api/cart/estimate", response_model=CartEstimateResponse)
+    @app.post("/api/cart/estimate", response_model=CartEstimateResponse, tags=["Cart"], deprecated=True, summary="?? ?? ?? API (???? ??)")
     def estimate_cart(request: CartEstimateRequest) -> CartEstimateResponse:
         prices = db.product_prices()
+        if any(item.product_id not in prices for item in request.items):
+            raise HTTPException(status_code=404, detail="??? ?? ? ????.")
         return CartEstimateResponse(
             total=sum(prices.get(item.product_id, 0) * item.quantity for item in request.items),
             item_count=sum(item.quantity for item in request.items),
         )
 
-    @app.post("/api/recognition/candidates", response_model=RecognitionResponse)
+    @app.post("/api/recognition/candidates", response_model=RecognitionResponse, tags=["Recognition"])
     def recognition_candidates(request: RecognitionRequest) -> RecognitionResponse:
         products = {row["ingredient"]: Product(id=row["id"], name=row["name"], price=row["price"], ingredients=[row["ingredient"]]) for row in db.products()}
         best_by_product: dict[int, tuple[Product, Detection]] = {}
@@ -129,14 +132,14 @@ def create_app(database: Database | None = None) -> FastAPI:
             ]
         )
 
-    @app.post("/api/cart/items", response_model=CartEstimateResponse)
+    @app.post("/api/cart/items", response_model=CartEstimateResponse, tags=["Cart"], deprecated=True, summary="?? ?? ?? ?? API (???? ??)")
     def confirm_candidate(request: ConfirmCandidateRequest) -> CartEstimateResponse:
         prices = db.product_prices()
         if request.product_id not in prices:
             raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다.")
         return CartEstimateResponse(total=prices[request.product_id] * request.quantity, item_count=request.quantity)
 
-    @app.get("/api/recipes", response_model=list[RecipeRecommendation])
+    @app.get("/api/recipes", response_model=list[RecipeRecommendation], tags=["Recipes"])
     def get_recipes(
         ingredients: Annotated[list[str] | None, Query(description="보유 재료 목록")] = None,
     ) -> list[RecipeRecommendation]:
