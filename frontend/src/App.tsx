@@ -25,7 +25,6 @@ export default function App() {
   const guard = useRef(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [selected, setSelected] = useState('1')
   const [pendingAdd, setPendingAdd] = useState<PendingAdd | null>(null)
   const blocked = busy || pendingAdd !== null
 
@@ -49,7 +48,6 @@ export default function App() {
       try { active = await request<Cart>('/api/carts/active') }
       catch (e) { if (!(e instanceof ApiError) || e.status !== 404) throw e; active = await post<Cart>('/api/carts') }
       setProducts(catalog)
-      if (catalog.length) setSelected(String(catalog[0].id))
       setConfig(recognitionConfig)
       applyCart(active)
     })
@@ -173,7 +171,6 @@ export default function App() {
           <button className="summary compact" onClick={() => setTab('cart')}><span>예상 구매금액 · {cart.item_count}개</span><strong>{won(cart.total)} →</strong></button>
           <div className="section-heading"><h2>인식 후보</h2><span className="muted">{candidates.length}개 대기</span></div><p className="muted">확인 후 담거나 제외하세요. 잘못 인식하면 상품을 바꿀 수 있어요.</p>
           {candidates.length === 0 ? <div className="card empty"><span>🔍</span><p>상품을 스캔하면 후보가 나타나요.</p></div> : candidates.map(candidate => <CandidateCard key={candidate.candidate_id} candidate={candidate} products={products} disabled={blocked} onAdd={id => add(id, candidate.candidate_id)} onDismiss={() => void action(async () => { await post(`/api/recognition/candidates/${candidate.candidate_id}/dismiss`); setCandidates(old => old.filter(c => c.candidate_id !== candidate.candidate_id)) })} />)}
-          <div className="card manual"><h2>상품 직접 선택</h2><p className="muted">카메라 없이도 장바구니를 사용할 수 있어요.</p><label htmlFor="manual-product">등록 상품</label><select id="manual-product" value={selected} onChange={e => setSelected(e.target.value)}>{products.map(p => <option key={p.id} value={p.id}>{p.name} · {won(p.price)}</option>)}</select><button className="primary full" disabled={blocked || !products.length} onClick={() => add(Number(selected))}>선택 상품 담기</button></div>
         </>}
         {tab === 'cart' && <>
           <div className="summary"><span>예상 구매금액 (시연용)</span><strong>{won(cart.total)}</strong><span>총 {cart.item_count}개 상품 · 실제 결제금액과 다를 수 있어요</span></div>

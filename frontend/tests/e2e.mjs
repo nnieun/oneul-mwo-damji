@@ -59,6 +59,8 @@ try {
   results.push('PASS: demo camera preview, scan, confirm and dismiss')
 
   // Simulate a committed POST whose response is lost. Retry must use the same key.
+  // There is no manual product picker anymore, so use the remaining candidate's
+  // own "correct the misrecognition" dropdown to add salt instead of green onion.
   let lost=false
   await page.route('**/api/carts/*/items',async route=>{
     if(!lost && route.request().method()==='POST'){
@@ -67,16 +69,20 @@ try {
       await route.abort('failed')
     }else await route.continue()
   })
-  await page.getByLabel('등록 상품',{exact:true}).selectOption('17')
-  await page.getByRole('button',{name:'선택 상품 담기'}).click()
+  await page.locator('.candidate').first().getByLabel('확인할 상품').selectOption('17')
+  await page.locator('.candidate').first().getByRole('button',{name:'확인 후 담기'}).click()
   await page.getByRole('button',{name:'담기 결과 다시 확인'}).click()
   await page.getByText('2,120원 →',{exact:true}).waitFor()
   const active=await (await fetch('http://127.0.0.1:4011/api/carts/active')).json()
   assert.equal(active.item_count,2)
   await page.unroute('**/api/carts/*/items')
   results.push('PASS: lost response retry does not duplicate cart item')
-  await page.getByLabel('등록 상품',{exact:true}).selectOption('3')
-  await page.getByRole('button',{name:'선택 상품 담기'}).click()
+
+  // Rescan (stop/start camera) for a fresh green-onion candidate to complete the recipe.
+  await page.getByRole('button',{name:'카메라 종료',exact:true}).click()
+  await page.getByRole('button',{name:'카메라 시작',exact:true}).click()
+  await page.locator('.candidate').nth(2).waitFor()
+  await page.locator('.candidate').nth(2).getByRole('button',{name:'확인 후 담기'}).click()
   await page.getByText('4,620원 →',{exact:true}).waitFor()
   await page.getByRole('navigation').getByRole('button',{name:'요리 추천'}).click()
   await page.getByRole('heading',{name:'재료 모두 보유',exact:true}).waitFor()

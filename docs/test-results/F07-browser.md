@@ -266,3 +266,20 @@ Call log:
 - PASS: required/optional ingredients and recipe detail rendered from API
 - PASS: quantity, delete, server total and shopping summary
 - PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
+
+# Browser integration run
+
+- Started: 2026-09-07T04:59:21.243Z
+- Base commit: ad660e8 + working tree
+- Command: pnpm --dir frontend test:e2e
+- Runtime: Node v24.20.0, win32
+- Browser: Playwright Chromium
+- Backend: isolated temporary SQLite, DEMO_MODE=true
+- Result: PASS
+- Real camera / Roboflow: NOT RUN (demo test)
+
+- PASS: demo camera preview, scan, confirm and dismiss
+- PASS: lost response retry does not duplicate cart item
+- PASS: required/optional ingredients and recipe detail rendered from API
+- PASS: quantity, delete, server total and shopping summary
+- PASS: reload persistence, mobile overflow, browser camera start/stop, no browser runtime errors
