@@ -19,6 +19,8 @@ __pycache__/
 
 # Local runtime and test artifacts
 backend/data/
+# Roboflow dataset export zips and their extracted contents (large, not source code)
+backend/model/
 .pytest_cache/
 .coverage
 htmlcov/

@@ -1,0 +1,4 @@
+# Optional dependencies for scripts/roboflow-test-eval.ipynb and other local analysis
+# notebooks. Not part of the deployed backend (see backend/requirements.txt).
+matplotlib==3.10.0
+ipykernel==6.29.5

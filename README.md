@@ -109,4 +109,6 @@ pnpm.cmd test:e2e
 - [pytest 전체 결과](docs/test-results/F07-integration.md)
 - [브라우저 통합 결과](docs/test-results/F07-browser.md)
 - [트러블슈팅](docs/트러블슈팅.md)
+- [Roboflow 데이터셋 설정 권장안](docs/로보플로우-데이터셋-설정.md)
+- [Roboflow Test set 평가 결과](docs/test-results/roboflow-test-eval.md) ([시각화 노트북](docs/test-results/roboflow-test-eval.ipynb), `scripts/evaluate_roboflow_models.py`로 재생성)
 
