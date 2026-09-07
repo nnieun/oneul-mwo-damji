@@ -1,10 +1,11 @@
-﻿"""Run pytest and append the actual result to a versioned Markdown report."""
+"""Run pytest and append the actual result to a versioned Markdown report."""
 import datetime
 import os
 from pathlib import Path
 import platform
 import subprocess
 import sys
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 import time
 
 root = Path(__file__).resolve().parents[1]

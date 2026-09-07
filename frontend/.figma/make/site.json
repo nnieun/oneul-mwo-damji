@@ -1,10 +1,7 @@
 {
-  "description": "Delivers a mobile-optimized web design inspired by Toss with intuitive button styles, enhancing user experience and engagement on smartphones.",
-  "robots": {
-    "index": false
-  },
-  "accessibility": {
-    "addBypassLinks": false,
-    "ignoreReducedMotion": false
-  }
+  "title": "오늘 뭐 담지",
+  "language": "ko",
+  "description": "상품을 확인해 담고, 담은 재료로 요리를 추천받는 스마트 카트",
+  "robots": { "index": false },
+  "accessibility": { "addBypassLinks": false, "ignoreReducedMotion": false }
 }
