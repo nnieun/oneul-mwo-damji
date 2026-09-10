@@ -1,12 +1,54 @@
 ﻿# 오늘 뭐 담지
 
-카메라 인식 후보를 확인해 장바구니에 담고, 예상 금액과 재료 기반 요리를 확인하는 로컬 시연용 스마트 카트입니다.
+카메라로 재료를 인식해 장바구니에 담고, 예상 금액과 재료 기반 요리를 확인하는 스마트 카트입니다.
+
+# 화면
+![alt text](<스크린샷 2026-09-10 171147.png>)
+![alt text](2.png)
+![alt text](3.png)
+
 
 - React + TypeScript + Vite
 - FastAPI + SQLite
 - 브라우저(접속 기기) 카메라 / Roboflow 객체 탐지
 - 상품 25종, 더미 레시피 14종
 - Swagger: 실행 후 <http://localhost:4000/docs>
+
+
+
+## Roboflow 모델 평가
+
+![alt text](image.png)
+![alt text](image-1.png)
+
+### 왜 Recall보다 Precision을 더 보는지
+
+**모델이 뭔가 놓치는 것보다, 틀린 걸 자신 있게 우기는 쪽이 더 위험합니다.**
+
+카메라가 상품을 인식해도 바로 담기지 않습니다. 일단 "인식 후보"로 띄워주고 사용자가 확인한 뒤에 담는 구조입니다.
+
+- **후보를 놓치면(Recall↓)** — 다시 스캔하거나 직접 골라 담으면 그만, 장바구니엔 영향 없음
+
+- **후보가 확신 있게 틀리면(Precision↓)** — 사용자가 대충 확인하고 그대로 눌러서 엉뚱한 상품이 담길 수 있음
+
+그래서 모델을 고르거나 `CONFIDENCE_THRESHOLD` 값을 정할 때는 Recall보다 클래스별 **Precision을 먼저** 봅니다.
+
+그러므로 
+스크린샷에서 **평균 정밀도(mAP@50)**가 72.2% → 80.5%로 가장 크게 오른 모델을 최종으로 선택했습니다.
+
+### 그레이스케일 증강을 뺀 이유
+
+**색 자체가 클래스를 구분하는 핵심 단서라서, 흑백으로 바꾸면 오히려 더 헷갈립니다.**
+
+사과(빨강), 당근(주황), 마늘·양파(흰색), 돼지고기·슬라이스햄·새우(붉은 계열)처럼 이 데이터셋은 색으로 구분되는 식재료가 많습니다. 그레이스케일을 쓰면 이 색 정보가 사라져서, 모양은 비슷한데 색만 다른 클래스(마늘 vs 양파 같은)가 더 헷갈리게 됩니다. 그래서 2번째 모델링에서는 제외 했습니다. 
+
+
+
+
+## 아키텍처
+![alt text](image-2.png)
+
+
 
 ## 실행 환경
 
@@ -58,25 +100,6 @@ pnpm.cmd dev
 
 <http://localhost:8443>에서 쇼핑을 시작하세요. `/api`는 백엔드 4000번 포트로 프록시됩니다. 다른 서버를 사용하면 `VITE_API_BASE_URL`을 지정하고 백엔드 `CORS_ORIGINS`에 프론트 주소를 등록하세요.
 
-## 시연 순서
-
-1. 쇼핑 시작 → 카메라 시작. 카메라가 연결되면 바로 스캔합니다(별도 스캔 버튼 없음). 실제 모드에서는 브라우저가 카메라 사용 권한을 물어보며, 허용해야 접속 기기의 카메라 미리보기가 나타납니다.
-2. 더미 모드에서는 계란·두부·대파 후보가 표시됩니다. 확인 후 담거나 제외하세요. 카메라가 다른 상품을 잘못 인식했다면 후보의 상품 선택을 바꿔서 확인할 수 있습니다.
-3. 장바구니에서 수량·삭제·예상 금액을 확인하세요.
-4. 요리 추천에서 보유 재료, 부족 재료, 조리 순서를 확인하세요.
-5. 새로고침 후 쇼핑 시작을 누르면 저장된 장바구니가 복원됩니다.
-6. 시연이 끝나면 카메라 종료를 누르세요.
-
-실제 결제는 제공하지 않습니다. 물만 기본 보유로 취급하며 양념은 장바구니에 담아야 보유 재료로 계산됩니다. 추천은 재료 종류 기준으로, 실제 조리 가능 분량을 계산하지 않습니다.
-
-## 실제 카메라·Roboflow 연결
-
-`backend/.env`에서 `DEMO_MODE=false`로 바꾸고 `ROBOFLOW_MODEL_ID`(예: `sang-rqj4u/ozm-4-yolov8n-t1`), `ROBOFLOW_API_KEY`를 설정한 뒤 서버를 재시작하세요. 모델 라벨이 기본 영문 라벨과 다르면 `ROBOFLOW_LABEL_MAP`에 정확한 라벨과 상품 ID를 JSON으로 지정하세요. 상품 ID는 Swagger 상품 목록에서 확인할 수 있습니다. `sang-rqj4u/ozm-4-yolov8n-t1`의 학습 클래스(apple, bread, carrot, egg, galic, l_onion, onion, raw_pork, shrimp, sliced_ham)는 상품 카탈로그에 기본 라벨로 이미 매핑되어 있으므로 별도 설정 없이 바로 인식됩니다.
-
-카메라는 브라우저로 접속한 기기의 카메라를 사용합니다(백엔드 PC의 카메라가 아닙니다). 실제 모드에서 카메라 시작을 누르면 브라우저가 카메라 권한을 요청하며, 허용해 미리보기가 뜨는 즉시 그 프레임을 JPEG로 캡처해 백엔드로 업로드합니다(별도 스캔 버튼 없음). 백엔드는 이를 Roboflow 추론 API로 전달합니다. 모델 키는 백엔드 환경변수에만 두고 프론트 환경변수에는 넣지 마세요. 모델 키가 없으면 설정 안내를 반환하며 더미 결과로 조용히 대체하지 않습니다. HTTPS가 아닌 주소에서는 브라우저가 카메라 권한을 막을 수 있으므로, 백엔드 PC가 아닌 다른 기기에서 접속할 때는 `localhost`가 아닌 실제 접속 주소가 브라우저의 보안 컨텍스트 요건(HTTPS 또는 신뢰할 수 있는 로컬 네트워크 설정)을 만족하는지 확인하세요.
-
-본 구현에서 실제 장치·학습 모델 검증 및 mAP50 측정은 미실행입니다. 별도 하드웨어 테스트와 실제 상품 시연이 필요합니다.
-
 ## 테스트와 결과 기록
 
 프로젝트 루트에서:
@@ -100,26 +123,10 @@ pnpm.cmd test:e2e
 
 설치된 Chrome을 사용하려면 `BROWSER_CHANNEL=chrome`을 환경변수로 지정할 수 있습니다. 브라우저 테스트는 4011·8445 포트에 테스트 서버를 자동 실행하고 임시 SQLite와 더미 영상으로 검증한 후 서버를 종료합니다. 포트가 이미 사용 중이면 해당 테스트 서버를 시작할 수 없습니다. 기본 Python 경로는 `backend/.venv`이며 `BACKEND_PYTHON`으로 변경할 수 있습니다.
 
-## Roboflow 모델 평가
 
-Roboflow 학습 화면은 Validation set 기준 지표만 보여줍니다. `scripts/evaluate_roboflow_models.py`는 실제 Test split으로 별도 평가해서 혼동행렬과 클래스별 Precision/Recall을 뽑아줍니다.
 
-1. Roboflow 프로젝트 → Versions → 평가할 버전 → "Download Dataset" → 포맷 **YOLOv8** 선택 → zip 다운로드(압축 풀 필요 없음).
-2. 프로젝트 루트에서 실행:
 
-   ```powershell
-   backend\.venv\Scripts\python.exe scripts/evaluate_roboflow_models.py --dataset ROBOFLOW_MODEL_ID=<export1.zip> --dataset ROBOFLOW_MODEL_ID_2=<export2.zip>
-   ```
 
-   `KEY`는 `backend/.env`의 변수명(그 값을 모델 ID로 사용) 또는 모델 ID 문자열을 직접 써도 됩니다. 모델마다 학습에 쓴 버전의 export를 따로 지정하세요. 결과는 `docs/test-results/roboflow-test-eval.md`(표)와 `roboflow-test-eval.json`(구조화된 데이터)에 저장됩니다.
-3. 그래프로 보려면 `docs/test-results/roboflow-test-eval.ipynb`를 여세요. 처음 한 번만 시각화용 패키지를 설치합니다.
-
-   ```powershell
-   uv pip install -r scripts/requirements-analysis.txt --python backend/.venv/Scripts/python.exe
-   backend\.venv\Scripts\python.exe -m ipykernel install --user --name oneul-mwo-damji --display-name "oneul-mwo-damji (.venv)"
-   ```
-
-   VS Code에서 노트북을 열고 커널을 `oneul-mwo-damji (.venv)`로 선택한 뒤 "Run All"을 누르면 혼동행렬 히트맵과 클래스별 Precision/Recall 막대그래프가 그려집니다. (`scripts/requirements-analysis.txt`는 시각화 전용이며 배포되는 백엔드 의존성과는 무관합니다.)
 
 ## 문서
 
