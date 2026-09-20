@@ -2,7 +2,6 @@ import re
 from contextlib import contextmanager
 from pathlib import Path
 import psycopg
-from psycopg.rows import BaseRow
 from .db import Database
 
 class Row(dict):
