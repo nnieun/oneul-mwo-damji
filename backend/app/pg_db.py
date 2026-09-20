@@ -9,6 +9,8 @@ class Row(dict):
         return list(self.values())[key] if isinstance(key, int) else super().__getitem__(key)
 
 def row_factory(cursor):
+    if cursor.description is None:
+        return lambda values: values
     names = [d.name for d in cursor.description]
     return lambda values: Row(zip(names, values))
 
