@@ -1,53 +1,205 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
+import { ApiError, post, postImage, request, requestKey, type Candidate, type Cart, type Product, type Recipe, type RecognitionConfig, type Recommendations, type Scan } from './api'
 
 type Tab = 'scan' | 'cart' | 'recipe'
-type Product = { id: number; name: string; price: number; ingredient: string; emoji: string }
-type Line = Product & { quantity: number }
-type Recipe = { name: string; minutes: number; needs: string[]; steps: string[] }
-const raw = [['계란 (1개)',320,'계란','🥚'],['두부 (300g)',1800,'두부','🫘'],['대파 (1단)',2500,'대파','🌱'],['즉석밥 (210g)',1500,'밥','🍚'],['간장 (500ml)',3500,'간장','🧂'],['식용유 (500ml)',4200,'식용유','🫙'],['감자 (600g)',3000,'감자','🥔'],['김치 (500g)',5900,'김치','🥬'],['양파 (1개)',930,'양파','🧅'],['토마토 (500g)',4500,'토마토','🍅'],['소금 (500g)',1800,'소금','🧂'],['돼지고기 (300g)',6900,'돼지고기','🥩'],['새우 (냉동 200g)',7900,'새우','🦐']]
-const products: Product[] = raw.map(([name,price,ingredient,emoji], i) => ({ id:i + 1, name:String(name), price:Number(price), ingredient:String(ingredient), emoji:String(emoji) }))
-const recipes: Recipe[] = [
-  ['파계란탕',8,['계란','대파','소금'],['대파와 물을 끓인다.','계란을 천천히 넣어 익힌다.','소금으로 간한다.']],
-  ['계란찜',15,['계란','소금'],['계란과 소금을 섞는다.','약불에서 부드럽게 찐다.']],
-  ['계란볶음밥',10,['계란','대파','밥','간장','식용유'],['대파를 썰고 계란을 푼다.','식용유에 대파와 계란을 볶는다.','밥과 간장을 넣고 골고루 볶는다.']],
-  ['두부계란국',15,['두부','계란','대파','소금'],['두부와 대파를 썬다.','물에 두부를 넣고 끓인다.','계란과 대파를 넣고 소금으로 간한다.']],
-  ['김치볶음밥',12,['김치','밥','식용유'],['김치를 잘게 썬다.','식용유에 김치를 볶고 밥을 넣는다.']],
-  ['감자양파볶음',15,['감자','양파','소금','식용유'],['감자와 양파를 채 썬다.','식용유에 볶고 소금으로 간한다.']],
-  ['토마토계란볶음',10,['토마토','계란','소금','식용유'],['토마토와 계란을 준비한다.','식용유에 볶고 소금으로 간한다.']],
-  ['제육볶음',20,['돼지고기','양파','대파','간장','식용유'],['채소를 썬다.','고기에 양념을 넣고 볶는다.','채소를 넣어 함께 익힌다.']],
-  ['새우볶음밥',15,['새우','밥','양파','대파','식용유','간장'],['채소와 새우를 손질한다.','식용유에 볶고 밥과 간장을 넣는다.']]
-].map(([name,minutes,needs,steps]) => ({ name:String(name), minutes:Number(minutes), needs:needs as string[], steps:steps as string[] }))
-const won = (n:number) => `${n.toLocaleString('ko-KR')}원`
+type CameraState = { state: 'stopped' | 'starting' | 'running' | 'error'; message: string }
+type PendingAdd = { product_id: number; quantity: number; candidate_id?: string; key: string }
+const won = (amount: number) => `${amount.toLocaleString('ko-KR')}원`
 
 export default function App() {
-  const [started,setStarted] = useState(false), [tab,setTab] = useState<Tab>('scan'), [cart,setCart] = useState<Line[]>([]), [candidates,setCandidates] = useState<Product[]>([]), [notice,setNotice] = useState(''), [camera,setCamera] = useState(false)
-  const video = useRef<HTMLVideoElement>(null), stream = useRef<MediaStream | null>(null)
-  const total=cart.reduce((s,x)=>s+x.price*x.quantity,0), count=cart.reduce((s,x)=>s+x.quantity,0), owned=new Set(cart.map(x=>x.ingredient))
-  useEffect(()=>()=>stream.current?.getTracks().forEach(x=>x.stop()),[])
-  async function scan(){
-    const source=video.current
-    if(!source || !source.videoWidth){setNotice('실제 인식을 위해 카메라를 시작하고 상품을 화면에 비춰 주세요.');return}
-    const canvas=document.createElement('canvas');canvas.width=source.videoWidth;canvas.height=source.videoHeight
-    canvas.getContext('2d')?.drawImage(source,0,0)
-    const image=await new Promise<Blob | null>(resolve=>canvas.toBlob(resolve,'image/jpeg',.85))
-    if(!image){setNotice('촬영에 실패했어요. 다시 시도해 주세요.');return}
-    try{
-      setNotice('Roboflow로 상품을 인식하고 있어요…')
-      const body=new FormData();body.append('image',image,'frame.jpg')
-      const response=await fetch('/api/recognition/scan',{method:'POST',body})
-      const data=await response.json()
-      if(!response.ok)throw new Error(typeof data?.detail==='string'?data.detail:'인식 요청에 실패했어요.')
-      setCandidates((data.candidates??[]).map((item:{product:{id:number;name:string;price:number;ingredients?:string[];emoji:string}})=>({ ...item.product, ingredient:item.product.ingredients?.[0]??item.product.name })))
-      setNotice(data.message??'인식 결과를 확인해 주세요.')
-    }catch(error){setNotice(error instanceof Error?error.message:'인식 요청에 실패했어요.')}
+  const [started, setStarted] = useState(false)
+  const [tab, setTab] = useState<Tab>('scan')
+  const [cart, setCart] = useState<Cart | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [config, setConfig] = useState<RecognitionConfig>({ mode: 'live', message: '인식 모드를 확인해 주세요.' })
+  const [camera, setCamera] = useState<CameraState>({ state: 'stopped', message: '카메라를 시작해 주세요.' })
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [recommendations, setRecommendations] = useState<Recommendations | null>(null)
+  const [recipeError, setRecipeError] = useState('')
+  const [recipeLoading, setRecipeLoading] = useState(false)
+  const [recipeRefresh, setRecipeRefresh] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const guard = useRef(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [pendingAdd, setPendingAdd] = useState<PendingAdd | null>(null)
+  const blocked = busy || pendingAdd !== null
+
+  const applyCart = useCallback((next: Cart) => {
+    setCart(old => !old || old.id !== next.id || next.revision >= old.revision ? next : old)
+  }, [])
+
+  async function action(task: () => Promise<void>) {
+    if (guard.current) return
+    guard.current = true
+    setBusy(true)
+    setError('')
+    try { await task() } catch (e) { setError(e instanceof Error ? e.message : '문제가 발생했습니다.') }
+    finally { guard.current = false; setBusy(false) }
   }
-  async function cameraToggle(){ if(camera){stream.current?.getTracks().forEach(x=>x.stop());stream.current=null;setCamera(false);return}; try {const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});stream.current=s;if(video.current){video.current.srcObject=s;await video.current.play()};setCamera(true);setNotice('상품을 카메라에 비춘 뒤 “AI 인식하기”를 눌러 주세요.')} catch {setNotice('카메라 권한을 허용해 주세요.')} }
-  function add(product:Product){setCart(old=>{const found=old.find(x=>x.id===product.id);return found?old.map(x=>x.id===product.id?{...x,quantity:x.quantity+1}:x):[...old,{...product,quantity:1}]});setCandidates(old=>old.filter(x=>x.id!==product.id));setNotice('장바구니에 담았어요.')}
-  function change(id:number,quantity:number){setCart(old=>quantity<1?old.filter(x=>x.id!==id):old.map(x=>x.id===id?{...x,quantity}:x))}
-  const titles={scan:'상품 스캔',cart:'장바구니',recipe:'요리 추천'}
-  if(!started)return <div className="app-shell splash"><div className="brand-icon">🛒</div><h1>오늘 뭐 담지</h1><p className="muted">AI가 인식하는 스마트 카트</p><div className="feature-list">{[['📸','상품 인식','카메라로 스캔하고 직접 확인해요'],['💰','예상 금액 확인','담은 상품의 금액을 바로 확인해요'],['🍽️','요리 추천','담은 재료로 만들 요리를 찾아요']].map(([icon,title,text])=><div className="card feature" key={title}><span>{icon}</span><div><strong>{title}</strong><p className="muted">{text}</p></div></div>)}</div><button className="primary full" onClick={()=>setStarted(true)}>쇼핑 시작하기</button><small className="muted">로그인 없는 체험용 데모 · 새로고침 시 장바구니가 초기화됩니다</small></div>
-  const suggested=recipes.filter(r=>r.needs.some(x=>owned.has(x))&&r.needs.filter(x=>!owned.has(x)).length<=2)
-  return <div className="app-shell"><header className="app-header"><div><h1>{titles[tab]}</h1><p className="muted">오늘 뭐 담지 · 시연용 스마트 카트</p></div><span className="brand-small">🛒</span></header><main><p className="notice">{notice}</p>{tab==='scan'&&<><div className="camera-panel"><video ref={video} autoPlay playsInline muted hidden={!camera}/><div className="camera-placeholder" hidden={camera}><span>📷</span><p>카메라를 시작해 주세요.</p></div><span className={`camera-badge ${camera?'active':''}`}>실제 Roboflow 인식 · {camera?'카메라 연결됨':'연결 대기'}</span></div><div className="button-row"><button className="primary full" onClick={()=>void cameraToggle()}>{camera?'카메라 종료':'카메라 시작'}</button><button disabled={!camera} onClick={()=>void scan()}>AI 인식하기</button></div><button className="summary compact" onClick={()=>setTab('cart')}><span>예상 구매금액 · {count}개</span><strong>{won(total)} →</strong></button><div className="section-heading"><h2>인식 후보</h2><span className="muted">{candidates.length}개 대기</span></div>{candidates.length===0?<div className="card empty"><span>🔍</span><p>카메라를 시작하고 AI 인식하기를 눌러주세요.</p></div>:candidates.map(p=><Candidate key={p.id} product={p} add={add} dismiss={()=>setCandidates(x=>x.filter(y=>y.id!==p.id))}/>)}</>}{tab==='cart'&&<><div className="summary"><span>예상 구매금액 (시연용)</span><strong>{won(total)}</strong><span>총 {count}개 상품 · 실제 결제금액과 다를 수 있어요</span></div>{cart.length===0?<div className="empty"><span>🛒</span><h2>장바구니가 비어있어요</h2><button onClick={()=>setTab('scan')}>상품 담으러 가기</button></div>:cart.map(x=><div className="card cart-line" key={x.id}><div className="line-top"><span className="product-emoji">{x.emoji}</span><div><strong>{x.name}</strong><p className="muted">단가 {won(x.price)}</p></div><strong className="line-total">{won(x.price*x.quantity)}</strong></div><div className="quantity"><button onClick={()=>change(x.id,0)}>삭제</button><div><button onClick={()=>change(x.id,x.quantity-1)}>−</button><span>{x.quantity}</span><button onClick={()=>change(x.id,x.quantity+1)}>+</button></div></div></div>)}</>}{tab==='recipe'&&<><h2>담은 재료로 만드는 한 끼</h2>{suggested.length===0?<div className="empty">재료를 담으면 요리를 추천해드려요.</div>:suggested.map(r=><RecipeCard key={r.name} recipe={r} owned={owned}/>)}</>}</main><nav>{(['scan','cart','recipe'] as Tab[]).map(x=><button key={x} className={tab===x?'selected':''} onClick={()=>setTab(x)}><span>{x==='scan'?'📸':x==='cart'?'🛒':'🍽️'}</span>{titles[x]}{x==='cart'&&count>0&&<b>{count}</b>}</button>)}</nav></div>
+
+  async function initialize() {
+    await action(async () => {
+      const [catalog, recognitionConfig] = await Promise.all([request<Product[]>('/api/products'), request<RecognitionConfig>('/api/recognition/config')])
+      let active: Cart
+      try { active = await request<Cart>('/api/carts/active') }
+      catch (e) { if (!(e instanceof ApiError) || e.status !== 404) throw e; active = await post<Cart>('/api/carts') }
+      setProducts(catalog)
+      setConfig(recognitionConfig)
+      applyCart(active)
+    })
+  }
+
+  useEffect(() => {
+    if (!started) return
+    void initialize()
+    // Initialization runs when entering the shopping screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started])
+
+  useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()) }, [])
+
+  async function startCamera(): Promise<boolean> {
+    if (config.mode === 'demo') { setCamera({ state: 'running', message: '더미 모드입니다. 실제 카메라를 사용하지 않아요.' }); return true }
+    setCamera({ state: 'starting', message: '카메라 연결 중입니다.' })
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      streamRef.current = stream
+      stream.getVideoTracks()[0]?.addEventListener('ended', () => setCamera({ state: 'error', message: '카메라 연결이 끊겼습니다. 다시 시작해 주세요.' }))
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      setCamera({ state: 'running', message: '카메라 연결됨' })
+      return true
+    } catch {
+      setCamera({ state: 'error', message: '카메라 접근 권한이 필요합니다. 브라우저에서 이 사이트의 카메라 사용을 허용해 주세요.' })
+      return false
+    }
+  }
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+    if (videoRef.current) videoRef.current.srcObject = null
+    setCamera({ state: 'stopped', message: '카메라가 종료되었습니다.' })
+  }
+
+  function captureFrame(): Promise<Blob> {
+    const canvas = canvasRef.current
+    if (!canvas) return Promise.reject(new Error('캡처를 사용할 수 없습니다.'))
+    if (config.mode === 'demo' || !videoRef.current) {
+      canvas.width = 320; canvas.height = 240
+      const ctx = canvas.getContext('2d')
+      if (ctx) { ctx.fillStyle = '#28211a'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText('DEMO', 130, 124) }
+    } else {
+      const video = videoRef.current
+      canvas.width = video.videoWidth || 320
+      canvas.height = video.videoHeight || 240
+      canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    }
+    return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('캡처에 실패했습니다.')), 'image/jpeg', 0.85))
+  }
+
+  useEffect(() => {
+    if (!cart) return
+    let alive = true
+    setRecipeLoading(true)
+    setRecipeError('')
+    setRecommendations(null)
+    void request<Recommendations>(`/api/carts/${cart.id}/recommendations`).then(data => {
+      if (alive && data.revision >= cart.revision) setRecommendations(data)
+    }).catch(e => { if (alive) setRecipeError(e.message) }).finally(() => { if (alive) setRecipeLoading(false) })
+    return () => { alive = false }
+  }, [cart?.id, cart?.revision, recipeRefresh])
+
+  async function submitAdd(pending: PendingAdd) {
+    if (!cart) return
+    const { key, ...body } = pending
+    try {
+      const result = await post<Cart>(`/api/carts/${cart.id}/items`, body, key)
+      applyCart(result)
+      setCandidates(old => old.filter(c => c.candidate_id !== body.candidate_id))
+      setPendingAdd(null)
+      setNotice('장바구니에 담았어요.')
+      // A replay can return an earlier snapshot; always reconcile with current state.
+      applyCart(await request<Cart>(`/api/carts/${cart.id}`))
+    } catch (e) {
+      if (e instanceof ApiError && e.status !== 0) setPendingAdd(null)
+      throw e
+    }
+  }
+
+  function add(productId: number, candidateId?: string) {
+    if (blocked || !cart) return
+    const pending = { product_id: productId, quantity: 1, candidate_id: candidateId, key: requestKey() }
+    setPendingAdd(pending)
+    void action(() => submitAdd(pending))
+  }
+
+  async function performScan() {
+    const frame = await captureFrame()
+    const result = await postImage<Scan>('/api/recognition/scan', frame)
+    setCandidates(result.candidates)
+    setNotice(`${result.mode === 'demo' ? '더미 인식 · ' : ''}${result.message}`)
+  }
+
+  const titles = { scan: '상품 스캔', cart: '장바구니', recipe: '요리 추천' }
+  if (!started) return <div className="app-shell splash">
+    <div className="brand-icon">🛒</div><h1>오늘 뭐 담지</h1><p className="muted">AI가 인식하는 스마트 카트</p>
+    <div className="feature-list">{[['📸', '상품 인식', '카메라로 스캔하고 직접 확인해요'], ['💰', '예상 금액 확인', '담은 상품의 금액을 바로 확인해요'], ['🍽️', '요리 추천', '담은 재료로 만들 요리를 찾아요']].map(([icon, title, text]) => <div className="card feature" key={title}><span>{icon}</span><div><strong>{title}</strong><p className="muted">{text}</p></div></div>)}</div>
+    <button className="primary full" onClick={() => setStarted(true)}>쇼핑 시작하기</button><small className="muted">접속 기기의 카메라 사용 · 시연용 프로토타입</small>
+  </div>
+
+  return <div className="app-shell">
+    <header className="app-header"><div><h1>{titles[tab]}</h1><p className="muted">오늘 뭐 담지 · 시연용 스마트 카트</p></div><span className="brand-small">🛒</span></header>
+    <main>
+      {error && <div className="alert" role="alert"><p>{error}</p>{!cart && <button disabled={busy} onClick={() => void initialize()}>다시 연결</button>}</div>}
+      {pendingAdd && !busy && <div className="alert"><p>담기 결과를 확인하지 못했어요. 같은 요청으로 다시 확인하면 중복으로 담기지 않아요.</p><button onClick={() => void action(() => submitAdd(pendingAdd))}>담기 결과 다시 확인</button></div>}
+      <p className="notice" role="status" aria-live="polite">{busy ? '처리 중이에요…' : notice}</p>
+      {!cart && !error && <div className="empty">쇼핑 데이터를 불러오고 있어요…</div>}
+      {cart && <>
+        {tab === 'scan' && <>
+          <div className="camera-panel">
+            <video ref={videoRef} autoPlay playsInline muted aria-label="카트 카메라 실시간 영상" hidden={!(camera.state === 'running' && config.mode === 'live')} />
+            {camera.state === 'running' && config.mode === 'demo' && <div className="camera-placeholder"><span>🧪</span><p>더미 모드 · 실제 인식 아님</p></div>}
+            {camera.state !== 'running' && <div className="camera-placeholder"><span>📷</span><p>{camera.message}</p></div>}
+            <span className={`camera-badge ${camera.state === 'running' ? 'active' : ''}`}>{config.mode === 'demo' ? '더미 모드 · 실제 인식 아님' : '실제 카메라'} · {camera.state === 'running' ? '연결됨' : '연결 대기'}</span>
+          </div>
+          <canvas ref={canvasRef} hidden />
+          <div className="button-row"><button className="primary full" disabled={blocked} onClick={() => void action(async () => { if (camera.state === 'running') { stopCamera(); return } if (await startCamera()) await performScan() })}>{camera.state === 'running' ? '카메라 종료' : '카메라 시작'}</button></div>
+          <button className="summary compact" onClick={() => setTab('cart')}><span>예상 구매금액 · {cart.item_count}개</span><strong>{won(cart.total)} →</strong></button>
+          <div className="section-heading"><h2>인식 후보</h2><span className="muted">{candidates.length}개 대기</span></div><p className="muted">확인 후 담거나 제외하세요. 잘못 인식하면 상품을 바꿀 수 있어요.</p>
+          {candidates.length === 0 ? <div className="card empty"><span>🔍</span><p>상품을 스캔하면 후보가 나타나요.</p></div> : candidates.map(candidate => <CandidateCard key={candidate.candidate_id} candidate={candidate} products={products} disabled={blocked} onAdd={id => add(id, candidate.candidate_id)} onDismiss={() => void action(async () => { await post(`/api/recognition/candidates/${candidate.candidate_id}/dismiss`); setCandidates(old => old.filter(c => c.candidate_id !== candidate.candidate_id)) })} />)}
+        </>}
+        {tab === 'cart' && <>
+          <div className="summary"><span>예상 구매금액 (시연용)</span><strong>{won(cart.total)}</strong><span>총 {cart.item_count}개 상품 · 실제 결제금액과 다를 수 있어요</span></div>
+          {cart.items.length === 0 ? <div className="empty"><span>🛒</span><h2>장바구니가 비어있어요</h2><p className="muted">스캔 탭에서 상품을 담아주세요.</p><button onClick={() => setTab('scan')}>상품 담으러 가기</button></div> : cart.items.map(item => <div className="card cart-line" key={item.product_id}>
+            <div className="line-top"><span className="product-emoji">{item.emoji}</span><div><strong>{item.name}</strong><p className="muted">단가 {won(item.unit_price)}</p></div><strong className="line-total">{won(item.subtotal)}</strong></div>
+            <div className="quantity"><button aria-label={`${item.name} 삭제`} disabled={blocked} onClick={() => void action(async () => applyCart(await request<Cart>(`/api/carts/${cart.id}/items/${item.product_id}`, { method: 'DELETE' })))}>삭제</button><div><button aria-label={`${item.name} 수량 줄이기`} disabled={blocked || item.quantity <= 1} onClick={() => void action(async () => applyCart(await request<Cart>(`/api/carts/${cart.id}/items/${item.product_id}`, { method: 'PATCH', body: JSON.stringify({ quantity: item.quantity - 1 }) })))}>−</button><span aria-label="수량">{item.quantity}</span><button aria-label={`${item.name} 수량 늘리기`} disabled={blocked || item.quantity >= 999} onClick={() => void action(async () => applyCart(await request<Cart>(`/api/carts/${cart.id}/items/${item.product_id}`, { method: 'PATCH', body: JSON.stringify({ quantity: item.quantity + 1 }) })))}>+</button></div></div>
+          </div>)}
+          {cart.items.length > 0 && <button className="primary full" onClick={() => setNotice(`쇼핑 내역: ${cart.item_count}개 상품, 예상 ${won(cart.total)}. 실제 결제 기능은 제공하지 않습니다.`)}>쇼핑 내역 확인</button>}
+        </>}
+        {tab === 'recipe' && <>
+          <h2>담은 재료로 만드는 한 끼</h2><p className="muted">맛있게 만드세요</p>
+          {recipeLoading && <p role="status">추천을 불러오는 중이에요…</p>}
+          {recipeError && <div className="alert" role="alert"><p>{recipeError}</p><button onClick={() => setRecipeRefresh(n => n + 1)}>추천 다시 불러오기</button></div>}
+          {recommendations && <><div className="chips">{recommendations.owned.map(name => <span key={name}>{name}</span>)}</div><p className="muted">{recommendations.note}</p>
+            {recommendations.recipes.length === 0 && <div className="card empty"><span>🍽️</span><p>{cart.items.length ? '조건에 맞는 요리가 아직 없어요. 재료를 더 담아보세요.' : '재료를 담으면 요리를 추천해드려요.'}</p><button onClick={() => setTab('scan')}>재료 담으러 가기</button></div>}
+            {(['ready', 'almost'] as const).map(category => { const list = recommendations.recipes.filter(r => r.category === category); return list.length > 0 && <section key={category}><h2>{category === 'ready' ? '재료 모두 보유' : '조금 더 담으면 가능'}</h2>{list.map(recipe => <RecipeCard key={recipe.id} recipe={recipe} />)}</section> })}
+          </>}
+        </>}
+      </>}
+    </main>
+    <nav aria-label="쇼핑 메뉴">{(['scan', 'cart', 'recipe'] as const).map(t => <button key={t} className={tab === t ? 'selected' : ''} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)}><span>{t === 'scan' ? '📸' : t === 'cart' ? '🛒' : '🍽️'}</span>{titles[t]}{t === 'cart' && cart && cart.item_count > 0 && <b>{cart.item_count}</b>}</button>)}</nav>
+  </div>
 }
-function Candidate({product,add,dismiss}:{product:Product;add:(p:Product)=>void;dismiss:()=>void}){const [id,setId]=useState(product.id);const selected=products.find(x=>x.id===id)??product;return <div className="card candidate"><div className="line-top"><span className="product-emoji">{product.emoji}</span><div><strong>{product.name}</strong><p className="muted">{won(product.price)} · 신뢰도 90%</p></div></div><label>확인할 상품</label><select value={id} onChange={e=>setId(Number(e.target.value))}>{products.map(x=><option key={x.id} value={x.id}>{x.name} · {won(x.price)}</option>)}</select><div className="button-row"><button onClick={dismiss}>제외</button><button className="primary" onClick={()=>add(selected)}>확인 후 담기</button></div></div>}
-function RecipeCard({recipe,owned}:{recipe:Recipe;owned:Set<string>}){const yes=recipe.needs.filter(x=>owned.has(x)),no=recipe.needs.filter(x=>!owned.has(x));return <details className="card recipe"><summary><strong>{recipe.name}</strong><span className="muted">{recipe.minutes}분 · 보유 {yes.length}/{recipe.needs.length}</span></summary><h3>보유 재료</h3><div className="chips">{yes.map(x=><span key={x}>{x}</span>)}</div>{no.length>0&&<><h3>추가로 필요한 재료</h3><div className="chips missing">{no.map(x=><span key={x}>{x}</span>)}</div></>}<h3>만드는 순서</h3><ol>{recipe.steps.map(x=><li key={x}>{x}</li>)}</ol></details>}
+
+function CandidateCard({ candidate, products, disabled, onAdd, onDismiss }: { candidate: Candidate; products: Product[]; disabled: boolean; onAdd: (id: number) => void; onDismiss: () => void }) {
+  const [productId, setProductId] = useState(candidate.product.id)
+  return <div className="card candidate"><div className="line-top"><span className="product-emoji">{candidate.product.emoji}</span><div><strong>{candidate.product.name}</strong><p className="muted">{won(candidate.product.price)} · 신뢰도 {Math.round(candidate.confidence * 100)}%</p></div></div><label htmlFor={`candidate-${candidate.candidate_id}`}>확인할 상품</label><select id={`candidate-${candidate.candidate_id}`} value={productId} disabled={disabled} onChange={e => setProductId(Number(e.target.value))}>{products.map(p => <option key={p.id} value={p.id}>{p.name} · {won(p.price)}</option>)}</select><div className="button-row"><button disabled={disabled} onClick={onDismiss}>제외</button><button className="primary" disabled={disabled} onClick={() => onAdd(productId)}>확인 후 담기</button></div></div>
+}
+
+function RecipeCard({ recipe }: { recipe: Recipe }) {
+  return <details className="card recipe"><summary><strong>{recipe.name}</strong><span className="muted">{recipe.cooking_time_minutes}분 · {recipe.servings}인분 · 보유 {recipe.matched.length}/{recipe.matched.length + recipe.missing.length}</span></summary><h3>보유 재료</h3><div className="chips">{recipe.matched.map(i => <span key={i}>{i}</span>)}</div>{recipe.missing.length > 0 && <><h3>추가로 필요한 재료</h3><div className="chips missing">{recipe.missing.map(i => <span key={i}>{i}</span>)}</div></>}<h3>재료와 분량</h3><ul>{recipe.ingredients.map(i => <li key={i.id}>{i.name} {i.amount}{!i.required && ' (선택)'}</li>)}</ul><h3>만드는 순서</h3><ol>{recipe.steps.map((step, i) => <li key={i}>{step}</li>)}</ol><small className="muted">시연용 더미 레시피 · 실제 분량은 직접 확인해 주세요.</small></details>
+}
