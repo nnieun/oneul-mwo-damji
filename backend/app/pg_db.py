@@ -47,7 +47,10 @@ class Connection:
 
 class PostgresDatabase(Database):
     def __init__(self, url: str): super().__init__(url)
-    def _open(self): return Connection(psycopg.connect(self.path, row_factory=row_factory))
+    def _open(self):
+        # Transaction poolers can reuse a backend connection; disable psycopg's
+        # named prepared statements to avoid duplicate prepared statement errors.
+        return Connection(psycopg.connect(self.path, row_factory=row_factory, prepare_threshold=None))
     def initialize(self):
         schema = Path(__file__).parents[1] / 'migrations' / '001_initial_postgres.sql'
         with self.connect() as c:
