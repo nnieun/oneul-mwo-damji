@@ -37,6 +37,10 @@ iniconfig==2.3.0
     # via pytest
 packaging==26.3
     # via pytest
+psycopg==3.2.6
+    # via -r backend/requirements.txt
+psycopg-binary==3.2.6
+    # via psycopg
 pluggy==1.6.0
     # via pytest
 pydantic==2.13.5
