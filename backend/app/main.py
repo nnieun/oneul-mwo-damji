@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .db import Database
+from .pg_db import PostgresDatabase
 from .schemas import Product, ERRORS
 from .recognition import RoboflowModel, configure_labels, router as recognition_router
 from .cart import router as cart_router
@@ -35,7 +36,7 @@ class RecipeRecommendation(BaseModel):
 
 
 def create_app(database: Database | None = None, model=None) -> FastAPI:
-    db=database or Database(os.getenv('DATABASE_PATH','data/app.db'))
+    db=database or (PostgresDatabase(os.environ['DATABASE_URL']) if os.getenv('DATABASE_URL') else Database(os.getenv('DATABASE_PATH','data/app.db')))
     model=model or RoboflowModel(demo=os.getenv('DEMO_MODE','false').lower()=='true')
 
     @asynccontextmanager
