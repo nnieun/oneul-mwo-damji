@@ -55,4 +55,6 @@ class PostgresDatabase(Database):
         schema = Path(__file__).parents[1] / 'migrations' / '001_initial_postgres.sql'
         with self.connect() as c:
             c.executescript(schema.read_text(encoding='utf-8'))
-            self._seed(c)
+            existing = c.execute('SELECT COUNT(*) AS count FROM products').fetchone()
+            if not existing or existing['count'] == 0:
+                self._seed(c)
