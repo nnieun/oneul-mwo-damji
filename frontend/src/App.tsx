@@ -160,6 +160,10 @@ export default function App() {
       {!cart && !error && <div className="empty">쇼핑 데이터를 불러오고 있어요…</div>}
       {cart && <>
         {tab === 'scan' && <>
+          <div className="card demo-supported-products">
+            <strong>현재 데모 버전에서는 아래 9개 상품만 인식할 수 있어요.</strong>
+            <p className="muted">대파 · 당근 · 양파 · 고기 · 사과 · 식빵 · 새우 · 마늘 · 슬라이스 햄</p>
+          </div>
           <div className="camera-panel">
             <video ref={videoRef} autoPlay playsInline muted aria-label="카트 카메라 실시간 영상" hidden={!(camera.state === 'running' && config.mode === 'live')} />
             {camera.state === 'running' && config.mode === 'demo' && <div className="camera-placeholder"><span>🧪</span><p>더미 모드 · 실제 인식 아님</p></div>}
