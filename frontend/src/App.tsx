@@ -44,9 +44,9 @@ export default function App() {
   async function initialize() {
     await action(async () => {
       const [catalog, recognitionConfig] = await Promise.all([request<Product[]>('/api/products'), request<RecognitionConfig>('/api/recognition/config')])
-      let active: Cart
-      try { active = await request<Cart>('/api/carts/active') }
-      catch (e) { if (!(e instanceof ApiError) || e.status !== 404) throw e; active = await post<Cart>('/api/carts') }
+      // Each page load gets an isolated cart. Nothing is stored in localStorage,
+      // so refreshing or reopening the link starts a fresh demo session.
+      const active = await post<Cart>('/api/carts')
       setProducts(catalog)
       setConfig(recognitionConfig)
       applyCart(active)

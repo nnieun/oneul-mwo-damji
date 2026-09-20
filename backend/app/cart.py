@@ -39,10 +39,8 @@ def router(db):
     def create_cart():
         with db.connect() as c:
             c.execute('BEGIN IMMEDIATE')
-            row=c.execute("SELECT id FROM carts WHERE status='active'").fetchone()
-            cid=row['id'] if row else str(uuid4())
-            if not row:
-                c.execute('INSERT INTO carts(id) VALUES (?)',(cid,))
+            cid=str(uuid4())
+            c.execute('INSERT INTO carts(id) VALUES (?)',(cid,))
             return read_cart(c,cid)
 
     @api.get('/active',response_model=Cart,summary='현재 활성 장바구니 조회')
