@@ -17,6 +17,7 @@ def row_factory(cursor):
 def translate(sql: str) -> str:
     sql = sql.replace('BEGIN IMMEDIATE', 'BEGIN')
     sql = sql.replace('?', '%s')
+    sql = sql.replace('SET quantity=quantity+excluded.quantity', 'SET quantity=cart_items.quantity+excluded.quantity')
     sql = re.sub(r'INSERT OR IGNORE INTO\s+', 'INSERT INTO ', sql, flags=re.I)
     if sql.lstrip().upper().startswith('INSERT INTO ') and ' ON CONFLICT' not in sql.upper():
         sql += ' ON CONFLICT DO NOTHING'
