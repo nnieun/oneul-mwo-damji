@@ -43,13 +43,21 @@ export default function App() {
 
   async function initialize() {
     await action(async () => {
-      const [catalog, recognitionConfig] = await Promise.all([request<Product[]>('/api/products'), request<RecognitionConfig>('/api/recognition/config')])
+      // The catalog is only needed when rendering product details. Load the
+      // cart and recognition settings first so the demo can become usable
+      // without waiting for the full product list query.
+      const [recognitionConfig, active] = await Promise.all([
+        request<RecognitionConfig>('/api/recognition/config'),
+        post<Cart>('/api/carts'),
+      ])
       // Each page load gets an isolated cart. Nothing is stored in localStorage,
       // so refreshing or reopening the link starts a fresh demo session.
-      const active = await post<Cart>('/api/carts')
-      setProducts(catalog)
       setConfig(recognitionConfig)
       applyCart(active)
+
+      void request<Product[]>('/api/products')
+        .then(setProducts)
+        .catch(e => setError(e instanceof Error ? e.message : '상품 목록을 불러오지 못했습니다.'))
     })
   }
 
