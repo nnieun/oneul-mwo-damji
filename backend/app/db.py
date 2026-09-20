@@ -107,13 +107,13 @@ class Database:
             old = c.execute('SELECT name FROM recipes WHERE id=?', (rid,)).fetchone()
             if old and old['name'] not in (name, '순두부찌개' if rid == 2 else name):
                 continue
-            c.execute('INSERT INTO recipes(id,name,ingredients,cooking_time,minutes,servings,steps,is_dummy) VALUES (?,?,?,?,?,1,?,1) ON CONFLICT(id) DO UPDATE SET name=excluded.name,ingredients=excluded.ingredients,cooking_time=excluded.cooking_time,minutes=excluded.minutes,steps=excluded.steps', (rid,name,','.join(x[0] for x in required),f'{minutes}분',minutes,json.dumps(steps,ensure_ascii=False)))
+            c.execute('INSERT INTO recipes(id,name,ingredients,cooking_time,minutes,servings,steps,is_dummy) VALUES (?,?,?,?,?,1,?,TRUE) ON CONFLICT(id) DO UPDATE SET name=excluded.name,ingredients=excluded.ingredients,cooking_time=excluded.cooking_time,minutes=excluded.minutes,steps=excluded.steps', (rid,name,','.join(x[0] for x in required),f'{minutes}분',minutes,json.dumps(steps,ensure_ascii=False)))
             for pos, (ingredient, amount) in enumerate(required + optional):
-                c.execute('INSERT OR IGNORE INTO recipe_ingredients VALUES (?,?,?,?,?)', (rid,ingredient_id(ingredient),amount,int(pos<len(required)),pos))
+                c.execute('INSERT OR IGNORE INTO recipe_ingredients VALUES (?,?,?,?,?)', (rid,ingredient_id(ingredient),amount,bool(pos<len(required)),pos))
         for row in c.execute('SELECT id,ingredients FROM recipes').fetchall():
             if not c.execute('SELECT 1 FROM recipe_ingredients WHERE recipe_id=?', (row['id'],)).fetchone():
                 for pos, name in enumerate(filter(None, map(str.strip,row['ingredients'].split(',')))):
-                    c.execute('INSERT INTO recipe_ingredients VALUES (?,?,?,?,?)', (row['id'],ingredient_id(name),'적당량',1,pos))
+                    c.execute('INSERT INTO recipe_ingredients VALUES (?,?,?,?,?)', (row['id'],ingredient_id(name),'적당량',True,pos))
 
     def products(self):
         with self.connect() as c:
